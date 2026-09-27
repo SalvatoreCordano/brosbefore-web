@@ -60,6 +60,7 @@
       det = { mobile, s, cx: -vw / 2 + colW / 2, cy: 0, step: H * s * 0.84 };
     }
     L = { vw, vh, W, H, stepX, stepY, det };
+    detailScroll = mobile ? detailEl.scrollTop : 0;
     cards.forEach((c) => {
       c.style.width = W + "px";
       c.style.height = H + "px";
@@ -94,7 +95,7 @@
     const dist = a <= 1 ? a : 1 + (a - 1) * 0.72;
     if (D.mobile) {
       return {
-        x: D.cx + s * D.step * dist, y: D.cy, z: 0,
+        x: D.cx + s * D.step * dist, y: D.cy - detailScroll, z: 0, // la tira sube con el scroll
         rx: 0, ry: 0,
         sc: D.s * shrink, blur: a * 1.5, op: clamp(1 - 0.28 * a, 0, 1),
       };
@@ -157,6 +158,17 @@
   }
 
   // ---------- índice activo / HUD ----------
+  // mobile: la tira de fotos acompaña el scroll del panel de detalle
+  let detailScroll = 0;
+  detailEl.addEventListener(
+    "scroll",
+    () => {
+      detailScroll = L.det.mobile ? detailEl.scrollTop : 0;
+      render();
+    },
+    { passive: true }
+  );
+
   let lastActive = -1;
   function activeIndex() {
     return wrap(Math.round(target));

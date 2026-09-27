@@ -687,15 +687,26 @@ button {
   .nav__logo img {
     height: 18px;
   }
+  /* El panel ocupa toda la pantalla pero es transparente arriba: la tira de fotos
+     se ve detrás y sube junto con el contenido al hacer scroll (app.js la mueve). */
   .detail {
     width: 100%;
-    top: 34vh;
-    top: 34dvh;
+    background: transparent;
     border-left: 0;
+    padding: 0;
+    pointer-events: none;
+    transform: translateY(40px);
+  }
+  .detail__inner {
+    pointer-events: auto;
+    margin-top: 34vh;
+    margin-top: 34dvh;
+    min-height: 66vh;
+    min-height: 66dvh;
+    background: var(--bg);
     border-top: 1px solid var(--line);
     border-radius: 20px 20px 0 0;
-    padding-top: 24px;
-    transform: translateY(40px);
+    padding: 24px var(--gutter) 64px;
   }
   .detail__top {
     margin-bottom: 24px;
