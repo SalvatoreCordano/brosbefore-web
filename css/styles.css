@@ -15,21 +15,7 @@
   --font: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-/* Tema oscuro: sigue al sistema salvo que el usuario elija uno en el menú */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-    --bg: #0f0e0d;
-    --ink: #f1efeb;
-    --ink-hover: #d6d3ce;
-    --body: #c9c5bf;
-    --muted: #8f8a84;
-    --line: #262421;
-    --soft: #1a1917;
-    --soft-line: #2c2a27;
-    --logo-filter: invert(1);
-  }
-}
+/* Tema oscuro: solo si el visitante lo elige con el botón del navbar (por defecto, claro) */
 :root[data-theme="dark"] {
   color-scheme: dark;
   --bg: #0f0e0d;
@@ -109,18 +95,22 @@ button {
   width: auto;
   filter: var(--logo-filter);
 }
-.theme-toggle {
-  margin-left: auto;
-  color: var(--muted);
-  font-size: 13px;
-  display: inline-flex;
+.nav__actions {
+  display: flex;
   align-items: center;
-  gap: 8px;
-  height: 46px;
-  transition: color 0.3s;
+  gap: 2px;
+}
+.theme-toggle {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  border-radius: 50%;
+  transition: background 0.3s;
 }
 .theme-toggle:hover {
-  color: var(--ink);
+  background: var(--soft);
 }
 .nav__burger {
   width: 44px;
@@ -329,13 +319,9 @@ button {
   transform: translateY(12px);
 }
 
-/* Toggle de sonido (junto a la hamburguesa) */
+/* Toggle de sonido (app.js lo mueve dentro de .nav__actions) */
 .sound {
-  position: fixed;
-  top: 22px;
-  right: calc(var(--gutter) + 44px);
   height: 44px;
-  z-index: 3001;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -719,9 +705,6 @@ button {
   }
   .hud__right .hud__hint {
     display: none;
-  }
-  .sound {
-    top: 18px;
   }
   .sound__label {
     display: none;

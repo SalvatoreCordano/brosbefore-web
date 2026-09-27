@@ -17,9 +17,12 @@ const SITE = {
     <a class="nav__logo" href="index.html" aria-label="brosbefore — inicio">
       <img src="assets/logo.svg" alt="(brosbefore)™" />
     </a>
-    <button class="nav__burger" aria-label="Abrir menú" aria-expanded="false" aria-controls="menu">
-      <span></span><span></span>
-    </button>
+    <div class="nav__actions">
+      <button type="button" class="theme-toggle" data-theme-toggle></button>
+      <button class="nav__burger" aria-label="Abrir menú" aria-expanded="false" aria-controls="menu">
+        <span></span><span></span>
+      </button>
+    </div>
   `;
 
   const menu = document.createElement("div");
@@ -43,7 +46,6 @@ const SITE = {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.8" fill="currentColor"/></svg>
         Instagram
       </a>
-      <button type="button" class="theme-toggle" data-theme-toggle></button>
     </div>
   `;
 
@@ -71,16 +73,17 @@ const SITE = {
   scrollers.forEach((s) => s.addEventListener("scroll", onScroll, { passive: true }));
   onScroll();
 
-  // ---------- tema claro / oscuro ----------
-  const themeBtn = menu.querySelector("[data-theme-toggle]");
-  const systemDark = matchMedia("(prefers-color-scheme: dark)");
-  const currentTheme = () =>
-    document.documentElement.dataset.theme || (systemDark.matches ? "dark" : "light");
-  const sun = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>`;
-  const moon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>`;
+  // ---------- tema claro / oscuro (claro por defecto) ----------
+  const themeBtn = header.querySelector("[data-theme-toggle]");
+  const currentTheme = () => (document.documentElement.dataset.theme === "dark" ? "dark" : "light");
+  const sun = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>`;
+  const moon = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>`;
   const paintThemeBtn = () => {
     const dark = currentTheme() === "dark";
-    themeBtn.innerHTML = dark ? `${sun} Modo claro` : `${moon} Modo oscuro`;
+    themeBtn.innerHTML = dark ? sun : moon;
+    const label = dark ? "Cambiar a modo claro" : "Cambiar a modo oscuro";
+    themeBtn.setAttribute("aria-label", label);
+    themeBtn.title = label;
   };
   themeBtn.addEventListener("click", () => {
     const next = currentTheme() === "dark" ? "light" : "dark";
@@ -90,6 +93,5 @@ const SITE = {
     } catch (e) {}
     paintThemeBtn();
   });
-  systemDark.addEventListener("change", paintThemeBtn);
   paintThemeBtn();
 })();

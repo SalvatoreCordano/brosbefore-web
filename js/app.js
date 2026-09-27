@@ -406,6 +406,7 @@
 
   // ---------- sonido ----------
   const soundBtn = document.getElementById("soundToggle");
+  document.querySelector(".nav__actions")?.prepend(soundBtn); // junto al tema y la hamburguesa
   const syncSound = () => {
     const on = ProjectorSound.enabled;
     soundBtn.classList.toggle("is-off", !on);
