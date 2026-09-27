@@ -1,13 +1,46 @@
 :root {
+  color-scheme: light;
   --bg: #ffffff;
   --ink: #1b1916;
+  --ink-hover: #3a3733;
+  --body: #3d3a36;
   --muted: #8b8680;
   --line: #ecebe7;
   --soft: #f6f5f2;
+  --soft-line: #e3e1dc;
+  --logo-filter: none;
   --radius: 18px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --gutter: clamp(16px, 3vw, 40px);
   --font: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+/* Tema oscuro: sigue al sistema salvo que el usuario elija uno en el menú */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0f0e0d;
+    --ink: #f1efeb;
+    --ink-hover: #d6d3ce;
+    --body: #c9c5bf;
+    --muted: #8f8a84;
+    --line: #262421;
+    --soft: #1a1917;
+    --soft-line: #2c2a27;
+    --logo-filter: invert(1);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0f0e0d;
+  --ink: #f1efeb;
+  --ink-hover: #d6d3ce;
+  --body: #c9c5bf;
+  --muted: #8f8a84;
+  --line: #262421;
+  --soft: #1a1917;
+  --soft-line: #2c2a27;
+  --logo-filter: invert(1);
 }
 
 *,
@@ -55,13 +88,39 @@ button {
   justify-content: space-between;
   padding: 22px var(--gutter);
   pointer-events: none;
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  transition: background 0.35s var(--ease), border-color 0.35s var(--ease);
 }
 .nav > * {
   pointer-events: auto;
 }
+/* al hacer scroll, fondo sólido para no pisar los textos */
+.nav.is-scrolled {
+  background: var(--bg);
+  border-bottom-color: var(--line);
+}
+.menu-open .nav {
+  background: transparent;
+  border-bottom-color: transparent;
+}
 .nav__logo img {
   height: 22px;
   width: auto;
+  filter: var(--logo-filter);
+}
+.theme-toggle {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 46px;
+  transition: color 0.3s;
+}
+.theme-toggle:hover {
+  color: var(--ink);
 }
 .nav__burger {
   width: 44px;
@@ -171,7 +230,7 @@ button {
   color: var(--bg);
 }
 .btn--solid:hover {
-  background: #3a3733;
+  background: var(--ink-hover);
 }
 .btn--ghost {
   border: 1px solid var(--line);
@@ -531,7 +590,7 @@ button {
 .about p {
   font-size: 17px;
   line-height: 1.6;
-  color: #3d3a36;
+  color: var(--body);
   margin: 0 0 18px;
   max-width: 620px;
 }
@@ -603,7 +662,7 @@ button {
   margin-bottom: 6px;
 }
 .plan--featured dt {
-  border-color: #e3e1dc;
+  border-color: var(--soft-line);
 }
 .plan dd {
   margin: 0;

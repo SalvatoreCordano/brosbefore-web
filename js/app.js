@@ -375,6 +375,7 @@
     selected = -1;
     document.body.classList.remove("is-detail");
     detailEl.setAttribute("aria-hidden", "true");
+    detailEl.scrollTop = 0; // devuelve el navbar a transparente
     history.replaceState(null, "", location.pathname);
     document.title = "(brosbefore)™ — Fotografía y film de bodas";
     kick();
