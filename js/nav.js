@@ -4,17 +4,23 @@ const SITE = {
 };
 
 (function () {
+  // URLs limpias: /index.html → /  ·  /nosotros.html → /nosotros (sin recargar)
+  const clean = location.pathname.replace(/\/index\.html$/, "/").replace(/\.html$/, "");
+  if (clean !== location.pathname) {
+    history.replaceState(null, "", clean + location.search + location.hash);
+  }
+
   const page = document.body.dataset.page || "inicio";
   const links = [
-    { id: "inicio", label: "Inicio", href: "index.html" },
-    { id: "nosotros", label: "Nosotros", href: "nosotros.html" },
-    { id: "pricing", label: "Pricing", href: "pricing.html" },
+    { id: "inicio", label: "Inicio", href: "./" },
+    { id: "nosotros", label: "Nosotros", href: "nosotros" },
+    { id: "pricing", label: "Pricing", href: "pricing" },
   ];
 
   const header = document.createElement("header");
   header.className = "nav";
   header.innerHTML = `
-    <a class="nav__logo" href="index.html" aria-label="brosbefore — inicio">
+    <a class="nav__logo" href="./" aria-label="brosbefore — inicio">
       <img src="assets/logo.svg" alt="(brosbefore)™" />
     </a>
     <div class="nav__actions">
