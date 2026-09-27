@@ -38,13 +38,28 @@ window.ProjectorSound = (function () {
   }
 
   // El navegador solo permite audio después de un gesto del usuario (click / tecla / touch).
+  // iOS Safari no cuenta "touchstart"/"pointerdown" como gesto válido: hay que desbloquear en
+  // touchend/click y además reproducir un buffer mudo dentro de ese mismo gesto.
+  let primed = false;
   function unlock() {
     init();
-    if (ctx && ctx.state === "suspended") ctx.resume();
+    if (!ctx) return;
+    if (ctx.state !== "running") ctx.resume().catch(() => {}); // "suspended" o "interrupted" (iOS)
+    if (!primed) {
+      primed = true;
+      const s = ctx.createBufferSource();
+      s.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+      s.connect(ctx.destination);
+      s.start(0);
+    }
   }
-  ["pointerdown", "keydown", "touchstart"].forEach((ev) =>
-    addEventListener(ev, unlock, { passive: true })
+  ["pointerdown", "pointerup", "touchstart", "touchend", "click", "keydown"].forEach((ev) =>
+    addEventListener(ev, unlock, { passive: true, capture: true })
   );
+  // al volver a la pestaña iOS deja el contexto "interrupted"; el próximo gesto lo reanuda
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") primed = false;
+  });
 
   // ráfaga de ruido filtrado = click mecánico
   function click(t, freq, q, gain, dur) {
