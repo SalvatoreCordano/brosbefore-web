@@ -238,17 +238,24 @@
     return [L.stepX / len2, L.stepY / len2];
   }
 
-  stage.addEventListener("pointerdown", (e) => {
+  function startDrag(e, el) {
     if (e.button !== 0) return;
     dragging = true;
     moved = 0;
     velocity = 0;
     start = { x: e.clientX, y: e.clientY, target };
     lastMove = { x: e.clientX, y: e.clientY, t: performance.now() };
-    stage.setPointerCapture(e.pointerId);
+    el.setPointerCapture(e.pointerId);
     kick();
+  }
+  stage.addEventListener("pointerdown", (e) => startDrag(e, stage));
+  // mobile: el panel de detalle tiene que recibir toques para que iOS lo deje scrollear,
+  // así que la zona transparente de arriba (la tira de fotos) reenvía el swipe horizontal
+  // al carrusel. El scroll vertical lo maneja el navegador (touch-action: pan-y).
+  detailEl.addEventListener("pointerdown", (e) => {
+    if (e.target === detailEl && L.det.mobile) startDrag(e, detailEl);
   });
-  stage.addEventListener("pointermove", (e) => {
+  function onDragMove(e) {
     if (!dragging) return;
     const dx = e.clientX - start.x;
     const dy = e.clientY - start.y;
@@ -262,7 +269,9 @@
     velocity = lerp(velocity, step / dt, 0.4);
     lastMove = { x: e.clientX, y: e.clientY, t: now };
     onTargetChange();
-  });
+  }
+  stage.addEventListener("pointermove", onDragMove);
+  detailEl.addEventListener("pointermove", onDragMove);
   function endDrag(e) {
     if (!dragging) return;
     dragging = false;
@@ -275,6 +284,8 @@
   }
   stage.addEventListener("pointerup", endDrag);
   stage.addEventListener("pointercancel", endDrag);
+  detailEl.addEventListener("pointerup", endDrag);
+  detailEl.addEventListener("pointercancel", endDrag);
 
   function handleClick(e) {
     const hit = document.elementsFromPoint(e.clientX, e.clientY).find((n) => n.classList && n.classList.contains("card"));

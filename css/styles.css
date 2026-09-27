@@ -694,11 +694,13 @@ button {
     background: transparent;
     border-left: 0;
     padding: 0;
-    pointer-events: none;
+    /* iOS no scrollea un contenedor con pointer-events: none; los swipes sobre la tira
+       se reenvían al carrusel desde app.js */
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
     transform: translateY(40px);
   }
   .detail__inner {
-    pointer-events: auto;
     margin-top: 34vh;
     margin-top: 34dvh;
     min-height: 66vh;
