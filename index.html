@@ -8,8 +8,24 @@
   <link rel="icon" href="assets/logo.svg" />
   <link rel="stylesheet" href="css/styles.css" />
   <script>try{var t=localStorage.getItem("bb-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+  <!-- el loader se muestra una vez por sesión -->
+  <script>try{if(sessionStorage.getItem("bb-intro"))document.documentElement.classList.add("no-intro")}catch(e){}</script>
+  <link rel="preload" as="image" href="assets/intro.webp" type="image/webp" />
 </head>
 <body class="home" data-page="inicio">
+  <div class="loader" id="loader" role="progressbar" aria-label="Cargando" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+    <img class="loader__img" src="assets/intro.webp" alt="" fetchpriority="high" />
+    <div class="loader__center">
+      <img class="loader__logo" src="assets/logo.svg" alt="(brosbefore)™" />
+      <p class="loader__tag">No es solo un día. Es una historia.</p>
+    </div>
+    <div class="loader__bottom">
+      <span>Fotografía y film de bodas</span>
+      <span class="loader__count" id="loaderCount">000</span>
+    </div>
+    <div class="loader__bar"><i id="loaderBar"></i></div>
+  </div>
+
   <main>
     <div class="stage" id="stage" aria-label="Trabajos"></div>
 
@@ -37,6 +53,7 @@
   <script src="js/nav.js"></script>
   <script src="js/sound.js"></script>
   <script src="js/data.js"></script>
+  <script src="js/loader.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
