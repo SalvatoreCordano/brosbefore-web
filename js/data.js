@@ -14,14 +14,27 @@ window.WORKS = [
     id: "ceziel-gianfranco",
     couple: "Ceziel & Gianfranco",
     place: "Paracas, Perú",
-    date: "Marzo 2025",
-    collection: "the legacy™",
-    tags: ["Fotografía", "Film", "Análogo 35mm", "Wedding reel"],
+    date: "7 de agosto, 2024",
+    collection: "essentials™",
+    tags: ["Fotografía", "Highlight film"],
+    // TODO: historia todavía de ejemplo — reemplazar con el texto real de la pareja
     story:
       "Una boda frente al mar, con el viento del desierto de testigo. Ceziel y Gianfranco querían algo honesto: sin poses, sin guion. Nos dejaron entrar a su día desde muy temprano y terminamos contando una historia de familia, sal y atardecer.",
-    cover: img("ceziel"),
+    cover: "assets/works/ceziel-gianfranco/01.jpg",
+    // La música tiene copyright (LatinAutor/UMPG) y YouTube bloquea el embed fuera de su sitio,
+    // así que el play abre YouTube. Si suben una versión embebible, usar video: ".../embed/ID".
     video: "",
-    photos: gallery("ceziel"),
+    watchUrl: "https://www.youtube.com/watch?v=yL7-UPrKCwg",
+    poster: "https://img.youtube.com/vi/yL7-UPrKCwg/maxresdefault.jpg",
+    photos: [
+      { src: "assets/works/ceziel-gianfranco/01.jpg", w: 1024, h: 1536 },
+      { src: "assets/works/ceziel-gianfranco/02.jpg", w: 1024, h: 1536 },
+      { src: "assets/works/ceziel-gianfranco/03.jpg", w: 1024, h: 1536 },
+      { src: "assets/works/ceziel-gianfranco/04.jpg", w: 1024, h: 1536 },
+      { src: "assets/works/ceziel-gianfranco/05.jpg", w: 1024, h: 683 },
+      { src: "assets/works/ceziel-gianfranco/06.jpg", w: 1024, h: 683 },
+      { src: "assets/works/ceziel-gianfranco/07.jpg", w: 1024, h: 683 },
+    ],
   },
   {
     id: "ben-meg",

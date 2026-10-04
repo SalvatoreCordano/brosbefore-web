@@ -319,9 +319,11 @@
   });
 
   // ---------- detalle ----------
-  // reserva el alto de la foto antes de que cargue (si la URL trae /ancho/alto, como los mocks)
-  function sizeAttrs(src) {
-    const m = src.match(/\/(\d+)\/(\d+)(?:\?|$)/);
+  // una foto puede ser un string (URL) o { src, w, h } para reservar su alto antes de que cargue
+  const photoSrc = (p) => (typeof p === "string" ? p : p.src);
+  function sizeAttrs(p) {
+    if (typeof p !== "string") return p.w && p.h ? `width="${p.w}" height="${p.h}"` : "";
+    const m = p.match(/\/(\d+)\/(\d+)(?:\?|$)/); // mocks de picsum: /ancho/alto
     return m ? `width="${m[1]}" height="${m[2]}"` : "";
   }
 
@@ -341,17 +343,25 @@
       <p class="detail__story">${w.story}</p>
 
       <div class="detail__label eyebrow"><span>Film</span><span>${w.collection}</span></div>
-      <div class="video" data-video>
-        <img src="${w.photos[0]}" alt="" loading="lazy" />
-        <button class="video__play" aria-label="Reproducir film de ${w.couple}">
+      <div class="video${w.watchUrl ? " is-external" : ""}" data-video>
+        <img src="${w.poster || photoSrc(w.photos[0])}" alt="" loading="lazy" />
+        ${
+          w.watchUrl
+            ? // video que no se puede embeber (p. ej. música con copyright): se abre en YouTube
+              `<a class="video__play" href="${w.watchUrl}" target="_blank" rel="noopener" aria-label="Ver el film de ${w.couple} en YouTube">
+          <span><svg width="20" height="22" viewBox="0 0 20 22" aria-hidden="true"><path d="M2 1.5v19L19 11z" fill="#1b1916"/></svg></span>
+        </a>
+        <span class="video__note">Ver en YouTube ↗</span>`
+            : `<button class="video__play" aria-label="Reproducir film de ${w.couple}">
           <span><svg width="20" height="22" viewBox="0 0 20 22" aria-hidden="true"><path d="M2 1.5v19L19 11z" fill="#1b1916"/></svg></span>
         </button>
-        <span class="video__note">Video próximamente</span>
+        <span class="video__note">Video próximamente</span>`
+        }
       </div>
 
       <div class="detail__label eyebrow"><span>Fotografía</span><span>${w.photos.length} fotos</span></div>
       <div class="photos">
-        ${w.photos.map((p, n) => `<img src="${p}" alt="${w.couple} — foto ${n + 1}" loading="lazy" ${sizeAttrs(p)} />`).join("")}
+        ${w.photos.map((p, n) => `<img src="${photoSrc(p)}" alt="${w.couple} — foto ${n + 1}" loading="lazy" ${sizeAttrs(p)} />`).join("")}
       </div>
 
       <button class="detail__next" data-next="${wrap(i + 1)}">
@@ -414,7 +424,7 @@
       return;
     }
     const play = e.target.closest(".video__play");
-    if (play) {
+    if (play && play.tagName !== "A" && selected >= 0) {
       const box = play.closest("[data-video]");
       const src = works[selected].video;
       if (!src) {
@@ -423,7 +433,7 @@
       }
       box.innerHTML = /\.mp4($|\?)/.test(src)
         ? `<video src="${src}" controls autoplay playsinline></video>`
-        : `<iframe src="${src}${src.includes("?") ? "&" : "?"}autoplay=1" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+        : `<iframe src="${src}${src.includes("?") ? "&" : "?"}autoplay=1&rel=0&playsinline=1" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
     }
   });
 

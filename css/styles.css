@@ -503,6 +503,10 @@ button {
   opacity: 0;
   transition: opacity 0.3s;
 }
+.video.is-external .video__note {
+  opacity: 1;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
+}
 .video.is-mock-clicked .video__note {
   opacity: 1;
 }
