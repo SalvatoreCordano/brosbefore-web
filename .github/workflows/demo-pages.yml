@@ -1,11 +1,13 @@
 # Publica en GitHub Pages el sitio actual (rama main, en la raíz) + la demo del monorepo
 # (rama development) en /demo y el admin en /demo/admin.
-# Se corre a mano: Actions → "Demo en GitHub Pages" → Run workflow (elegir rama development).
+# Corre solo en cada push a main o development (también a mano desde Actions).
 # Requisitos (una sola vez): Settings → Pages → Source: "GitHub Actions", y en
-# Settings → Environments → github-pages, permitir la rama development.
+# Settings → Environments → github-pages, permitir las ramas main y development.
 name: Demo en GitHub Pages
 
 on:
+  push:
+    branches: [main, development]
   workflow_dispatch:
 
 permissions:
@@ -22,6 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: development
       - uses: actions/checkout@v4
         with:
           ref: main
