@@ -327,6 +327,25 @@
     return m ? `width="${m[1]}" height="${m[2]}"` : "";
   }
 
+  // Galería en 2 columnas que se lee en orden (1, 2 / 3, 4…): cada foto va a la columna
+  // más corta. En mobile las columnas se aplanan y "order" mantiene la secuencia.
+  function photoRatio(p) {
+    const m = sizeAttrs(p).match(/width="(\d+)" height="(\d+)"/);
+    return m ? m[2] / m[1] : 1.25;
+  }
+  function photoColumns(w) {
+    const cols = [[], []];
+    const heights = [0, 0];
+    w.photos.forEach((p, n) => {
+      const c = heights[1] < heights[0] ? 1 : 0;
+      heights[c] += photoRatio(p);
+      cols[c].push(
+        `<img src="${photoSrc(p)}" alt="${w.couple} — foto ${n + 1}" loading="lazy" style="order:${n}" ${sizeAttrs(p)} />`
+      );
+    });
+    return cols.map((c) => `<div class="photos__col">${c.join("")}</div>`).join("");
+  }
+
   function detailHTML(w, i) {
     const next = works[wrap(i + 1)];
     return `
@@ -352,9 +371,7 @@
       </div>
 
       <div class="detail__label eyebrow"><span>Fotografía</span><span>${w.photos.length} fotos</span></div>
-      <div class="photos">
-        ${w.photos.map((p, n) => `<img src="${photoSrc(p)}" alt="${w.couple} — foto ${n + 1}" loading="lazy" ${sizeAttrs(p)} />`).join("")}
-      </div>
+      <div class="photos">${photoColumns(w)}</div>
 
       <button class="detail__next" data-next="${wrap(i + 1)}">
         <span><span class="eyebrow">Siguiente historia</span><strong>${next.couple}</strong></span>

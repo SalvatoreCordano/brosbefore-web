@@ -518,8 +518,13 @@ button {
   opacity: 1;
 }
 .photos {
-  columns: 2;
-  column-gap: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.photos__col {
+  flex: 1;
+  min-width: 0;
 }
 .photos img {
   width: 100%;
@@ -724,8 +729,14 @@ button {
   .detail__top {
     margin-bottom: 24px;
   }
+  /* una sola columna: se aplanan las dos y cada foto vuelve a su lugar con "order" */
   .photos {
-    columns: 1;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+  .photos__col {
+    display: contents;
   }
   .hud__right .hud__hint {
     display: none;

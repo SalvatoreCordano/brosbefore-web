@@ -69,11 +69,16 @@ window.WORKS = [
     video: "https://www.youtube.com/embed/5qCl7eJHBWk",
     poster: "https://img.youtube.com/vi/5qCl7eJHBWk/maxresdefault.jpg",
     photos: [
-      { src: "assets/works/paul-gabriela/01.jpg", w: 1600, h: 1067 },
+      { src: "assets/works/paul-gabriela/01.jpg", w: 640, h: 960 },
       { src: "assets/works/paul-gabriela/02.jpg", w: 640, h: 960 },
       { src: "assets/works/paul-gabriela/03.jpg", w: 640, h: 960 },
-      { src: "assets/works/paul-gabriela/04.jpg", w: 640, h: 960 },
+      { src: "assets/works/paul-gabriela/04.jpg", w: 1600, h: 1067 },
       { src: "assets/works/paul-gabriela/05.jpg", w: 640, h: 960 },
+      { src: "assets/works/paul-gabriela/06.jpg", w: 640, h: 960 },
+      { src: "assets/works/paul-gabriela/07.jpg", w: 640, h: 960 },
+      { src: "assets/works/paul-gabriela/08.jpg", w: 1600, h: 1067 },
+      { src: "assets/works/paul-gabriela/09.jpg", w: 640, h: 960 },
+      { src: "assets/works/paul-gabriela/10.jpg", w: 640, h: 960 },
     ],
   },
   {
