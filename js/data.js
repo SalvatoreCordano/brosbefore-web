@@ -44,11 +44,16 @@ window.WORKS = [
     tags: ["Fotografía", "Story film"],
     story:
       "Texto de ejemplo. Aquí va la historia de la pareja: cómo se conocieron, qué querían para su día y qué momento nos marcó durante la cobertura.",
-    // TODO: fotos de ejemplo — usar 8 fotos de la galería zelmarreyes.pixieset.com/diegoandale
-    cover: img("diegoale"),
+    cover: "assets/works/diego-ale/01.jpg",
     video: "https://www.youtube.com/embed/muZDcVTYJAI",
     poster: "https://img.youtube.com/vi/muZDcVTYJAI/maxresdefault.jpg",
-    photos: gallery("diegoale"),
+    photos: [
+      { src: "assets/works/diego-ale/01.jpg", w: 640, h: 961 },
+      { src: "assets/works/diego-ale/02.jpg", w: 640, h: 960 },
+      { src: "assets/works/diego-ale/03.jpg", w: 1600, h: 1067 },
+      { src: "assets/works/diego-ale/04.jpg", w: 1024, h: 683 },
+      { src: "assets/works/diego-ale/05.jpg", w: 1600, h: 1067 },
+    ],
   },
   {
     id: "paul-gabriela",
