@@ -4,8 +4,23 @@
     {
       "name": "web",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["--yes", "http-server", "-p", "5173", "-c-1", "--silent"],
-      "port": 5173
+      "runtimeArgs": ["--yes", "http-server", "-c-1", "--silent"],
+      "port": 5173,
+      "autoPort": true
+    },
+    {
+      "name": "next-web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@bb/web", "dev"],
+      "port": 3000,
+      "autoPort": true
+    },
+    {
+      "name": "next-admin",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@bb/admin", "dev"],
+      "port": 3001,
+      "autoPort": true
     }
   ]
 }

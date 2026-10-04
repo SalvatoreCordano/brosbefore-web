@@ -1,0 +1,22 @@
+{
+  "name": "@bb/admin",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "node ../../scripts/sync-assets.mjs && node ../../scripts/next-dev.mjs 3001",
+    "build": "node ../../scripts/sync-assets.mjs && next build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@bb/core": "workspace:*",
+    "next": "^16.3.8",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^5.9.0"
+  }
+}
