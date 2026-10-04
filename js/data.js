@@ -45,14 +45,19 @@ window.WORKS = [
     story:
       "Texto de ejemplo. Aquí va la historia de la pareja: cómo se conocieron, qué querían para su día y qué momento nos marcó durante la cobertura.",
     cover: "assets/works/diego-ale/01.jpg",
+    coverPos: "59% center", // foto horizontal: corre el encuadre para que entren las dos caras
     video: "https://www.youtube.com/embed/muZDcVTYJAI",
     poster: "https://img.youtube.com/vi/muZDcVTYJAI/maxresdefault.jpg",
     photos: [
-      { src: "assets/works/diego-ale/01.jpg", w: 640, h: 960 },
-      { src: "assets/works/diego-ale/02.jpg", w: 1600, h: 1067 },
-      { src: "assets/works/diego-ale/03.jpg", w: 1024, h: 683 },
-      { src: "assets/works/diego-ale/04.jpg", w: 640, h: 961 },
-      { src: "assets/works/diego-ale/05.jpg", w: 1600, h: 1067 },
+      { src: "assets/works/diego-ale/01.jpg", w: 1600, h: 1067 },
+      { src: "assets/works/diego-ale/02.jpg", w: 1024, h: 683 },
+      { src: "assets/works/diego-ale/03.jpg", w: 640, h: 961 },
+      { src: "assets/works/diego-ale/04.jpg", w: 640, h: 960 },
+      { src: "assets/works/diego-ale/05.jpg", w: 1024, h: 683 },
+      { src: "assets/works/diego-ale/06.jpg", w: 640, h: 960 },
+      { src: "assets/works/diego-ale/07.jpg", w: 640, h: 961 },
+      { src: "assets/works/diego-ale/08.jpg", w: 1600, h: 1067 },
+      { src: "assets/works/diego-ale/09.jpg", w: 640, h: 960 },
     ],
   },
   {

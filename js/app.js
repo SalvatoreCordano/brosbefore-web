@@ -29,7 +29,9 @@
     const el = document.createElement("div");
     el.className = "card";
     el.dataset.index = i;
-    el.innerHTML = `<img src="${w.cover}" alt="${w.couple} — ${w.place}" draggable="false" ${i > 3 && i < N - 3 ? 'loading="lazy"' : ""}/>`;
+    // coverPos: encuadre de la portada dentro de la card vertical (útil si la foto es horizontal)
+    const pos = w.coverPos ? ` style="object-position:${w.coverPos}"` : "";
+    el.innerHTML = `<img src="${w.cover}" alt="${w.couple} — ${w.place}" draggable="false"${pos} ${i > 3 && i < N - 3 ? 'loading="lazy"' : ""}/>`;
     stage.appendChild(el);
     return el;
   });
@@ -337,7 +339,7 @@
     const cols = [[], []];
     const heights = [0, 0];
     w.photos.forEach((p, n) => {
-      const c = heights[1] < heights[0] ? 1 : 0;
+      const c = heights[1] < heights[0] - 0.05 ? 1 : 0; // casi empate → izquierda, para no invertir el orden
       heights[c] += photoRatio(p);
       cols[c].push(
         `<img src="${photoSrc(p)}" alt="${w.couple} — foto ${n + 1}" loading="lazy" style="order:${n}" ${sizeAttrs(p)} />`
