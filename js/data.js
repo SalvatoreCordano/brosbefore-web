@@ -46,7 +46,11 @@ window.WORKS = [
     story:
       "Dos días en Texas: una sesión pre-boda entre campos abiertos y un día de boda lleno de detalles pequeños. Ben y Meg se ríen igual que hace diez años, y eso fue lo que quisimos guardar.",
     cover: img("benmeg"),
+    // Se abre en YouTube (mismo criterio que Ceziel & Gianfranco). Si el embed está permitido,
+    // se puede cambiar a video: "https://www.youtube.com/embed/muZDcVTYJAI".
     video: "",
+    watchUrl: "https://www.youtube.com/watch?v=muZDcVTYJAI",
+    poster: "https://img.youtube.com/vi/muZDcVTYJAI/maxresdefault.jpg",
     photos: gallery("benmeg"),
   },
   {
