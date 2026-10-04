@@ -1,14 +1,8 @@
-// MOCK — reemplazar imágenes, textos y video cuando lleguen los archivos reales.
-// cover: foto del carrusel (vertical, ~4:5)
-// video: URL de embed (YouTube/Vimeo) o .mp4 — vacío = placeholder
+// Coberturas, en el orden del carrusel. Los campos marcados TODO aún son de ejemplo.
+// cover: foto del carrusel (card vertical ~4:5) · coverPos: encuadre opcional (CSS object-position)
+// video: URL de embed (YouTube/Vimeo) o .mp4 — vacío = "Video próximamente"
 // poster: portada del video (opcional, si no usa la primera foto)
-// photos: galería de la cobertura
-const img = (seed, w = 900, h = 1125) => `https://picsum.photos/seed/bb-${seed}/${w}/${h}`;
-
-const gallery = (seed, n = 8) =>
-  Array.from({ length: n }, (_, i) =>
-    i % 3 === 0 ? img(`${seed}-${i}`, 1200, 800) : img(`${seed}-${i}`, 800, 1000)
-  );
+// photos: galería, en orden — { src, w, h } (w/h reservan el alto antes de cargar)
 
 window.WORKS = [
   {
@@ -45,18 +39,17 @@ window.WORKS = [
     story:
       "Texto de ejemplo. Aquí va la historia de la pareja: cómo se conocieron, qué querían para su día y qué momento nos marcó durante la cobertura.",
     cover: "assets/works/diego-ale/01.jpg",
-    coverPos: "59% center", // foto horizontal: corre el encuadre para que entren las dos caras
     video: "https://www.youtube.com/embed/muZDcVTYJAI",
     poster: "https://img.youtube.com/vi/muZDcVTYJAI/maxresdefault.jpg",
     photos: [
-      { src: "assets/works/diego-ale/01.jpg", w: 1600, h: 1067 },
-      { src: "assets/works/diego-ale/02.jpg", w: 1024, h: 683 },
+      { src: "assets/works/diego-ale/01.jpg", w: 1024, h: 683 },
+      { src: "assets/works/diego-ale/02.jpg", w: 640, h: 960 },
       { src: "assets/works/diego-ale/03.jpg", w: 640, h: 961 },
-      { src: "assets/works/diego-ale/04.jpg", w: 640, h: 960 },
-      { src: "assets/works/diego-ale/05.jpg", w: 1024, h: 683 },
-      { src: "assets/works/diego-ale/06.jpg", w: 640, h: 960 },
-      { src: "assets/works/diego-ale/07.jpg", w: 640, h: 961 },
-      { src: "assets/works/diego-ale/08.jpg", w: 1600, h: 1067 },
+      { src: "assets/works/diego-ale/04.jpg", w: 1600, h: 1067 },
+      { src: "assets/works/diego-ale/05.jpg", w: 640, h: 960 },
+      { src: "assets/works/diego-ale/06.jpg", w: 1600, h: 1067 },
+      { src: "assets/works/diego-ale/07.jpg", w: 1024, h: 683 },
+      { src: "assets/works/diego-ale/08.jpg", w: 640, h: 961 },
       { src: "assets/works/diego-ale/09.jpg", w: 640, h: 960 },
     ],
   },
@@ -87,55 +80,45 @@ window.WORKS = [
     ],
   },
   {
-    id: "mock-4",
-    couple: "Andrea & Sebastián",
-    place: "Cusco, Perú",
+    id: "jose-michelle",
+    couple: "Jose & Michelle",
+    // TODO: lugar, fecha, colección, tags, historia y resto de fotos todavía de ejemplo
+    place: "Perú",
     date: "Mayo 2025",
     collection: "the legacy™",
     tags: ["Fotografía", "Legacy film", "Análogo 120mm"],
     story:
       "Texto de ejemplo. Aquí va la historia de la pareja: cómo se conocieron, qué querían para su día y qué momento nos marcó durante la cobertura.",
-    cover: img("mock4"),
+    cover: "assets/works/jose-michelle/01.jpg",
     video: "",
-    photos: gallery("mock4"),
+    photos: [{ src: "assets/works/jose-michelle/01.jpg", w: 640, h: 960 }],
   },
   {
-    id: "mock-5",
-    couple: "Lucía & Mateo",
-    place: "Arequipa, Perú",
+    id: "salva-lu",
+    couple: "Salva & Lu",
+    // TODO: lugar, fecha, colección, tags, historia y resto de fotos todavía de ejemplo
+    place: "Perú",
     date: "Agosto 2025",
     collection: "the story™",
     tags: ["Fotografía", "Story film", "Wedding reel"],
     story:
       "Texto de ejemplo. Aquí va la historia de la pareja: cómo se conocieron, qué querían para su día y qué momento nos marcó durante la cobertura.",
-    cover: img("mock5"),
+    cover: "assets/works/salva-lu/01.jpg",
     video: "",
-    photos: gallery("mock5"),
+    photos: [{ src: "assets/works/salva-lu/01.jpg", w: 640, h: 960 }],
   },
   {
-    id: "mock-6",
-    couple: "Valeria & Diego",
-    place: "Máncora, Perú",
+    id: "giulio-fer",
+    couple: "Giulio & Fer",
+    // TODO: lugar, fecha, colección, tags, historia y resto de fotos todavía de ejemplo
+    place: "Perú",
     date: "Febrero 2025",
     collection: "essentials™",
     tags: ["Fotografía", "Highlight film"],
     story:
       "Texto de ejemplo. Aquí va la historia de la pareja: cómo se conocieron, qué querían para su día y qué momento nos marcó durante la cobertura.",
-    cover: img("mock6"),
+    cover: "assets/works/giulio-fer/01.jpg",
     video: "",
-    photos: gallery("mock6"),
-  },
-  {
-    id: "mock-7",
-    couple: "Camila & Joaquín",
-    place: "Valle Sagrado, Perú",
-    date: "Junio 2025",
-    collection: "the legacy™",
-    tags: ["Fotografía", "Legacy film", "Video dump"],
-    story:
-      "Texto de ejemplo. Aquí va la historia de la pareja: cómo se conocieron, qué querían para su día y qué momento nos marcó durante la cobertura.",
-    cover: img("mock7"),
-    video: "",
-    photos: gallery("mock7"),
+    photos: [{ src: "assets/works/giulio-fer/01.jpg", w: 640, h: 960 }],
   },
 ];
