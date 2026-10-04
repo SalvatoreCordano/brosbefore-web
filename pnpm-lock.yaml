@@ -49,13 +49,13 @@ importers:
         specifier: workspace:*
         version: link:../../packages/core
       next:
-        specifier: '16'
+        specifier: ^16.3.8
         version: 16.3.8(@types/node@26.6.4)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       react:
-        specifier: '19'
+        specifier: ^19.3.0
         version: 19.3.0
       react-dom:
-        specifier: '19'
+        specifier: ^19.3.0
         version: 19.3.0(react@19.3.0)
     devDependencies:
       '@types/node':
@@ -72,6 +72,10 @@ importers:
         version: 5.9.3
 
   packages/core:
+    dependencies:
+      fflate:
+        specifier: ^0.8.3
+        version: 0.8.3
     devDependencies:
       typescript:
         specifier: ^5.9.0
@@ -340,6 +344,9 @@ packages:
   detect-libc@2.1.2:
     resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
     engines: {node: '>=8'}
+
+  fflate@0.8.3:
+    resolution: {integrity: sha512-tbZNuJrLwGUp3zshBtdy4W+ORxZuIh8a5ilyIEQDC5rY1f3U20JMry0Ll3WBzU58EZKsEuJFXhb5gwv8CsPvgA==}
 
   nanoid@3.3.19:
     resolution: {integrity: sha512-Y2tUNy4ouw6tq5oDSKeQYGOyhkUBhNOcGV/02KC+6kd9eDGqdZd++mjMiIDilrBYvjEnCYvVtsuHCuP+okSfug==}
@@ -616,6 +623,8 @@ snapshots:
 
   detect-libc@2.1.2:
     optional: true
+
+  fflate@0.8.3: {}
 
   nanoid@3.3.19: {}
 

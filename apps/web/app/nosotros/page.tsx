@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { CtaBlock } from "@/components/CtaBlock";
 import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = { title: "Nosotros — (brosbefore)™" };
@@ -48,6 +49,14 @@ export default function Nosotros() {
         <p className="quote">
           En 30 años vas a querer volver a este día. Con tu familia. Con tus amigos. Con tus futuras generaciones.
         </p>
+
+        <CtaBlock
+          text="Mira las historias que hemos contado, o elige cómo quieres que contemos la tuya."
+          links={[
+            { href: "/galeria", label: "Ver galería" },
+            { href: "/planes", label: "Ver planes" },
+          ]}
+        />
       </main>
       <Footer />
     </>

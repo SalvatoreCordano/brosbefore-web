@@ -1,5 +1,5 @@
 # Requerimientos — Experiencia brosbefore
-_Rama: `development` · Estado: borrador para validar · Última actualización: 2026-10-04_
+_Rama: `development` · Estado: mock implementado (web, portal y admin) · Última actualización: 2026-10-04_
 
 > **Fase actual: mock interactivo para presentar.** Todo funciona en el navegador con datos de ejemplo:
 > sin Supabase, sin R2, sin correos reales. La estructura queda lista para conectar esos servicios

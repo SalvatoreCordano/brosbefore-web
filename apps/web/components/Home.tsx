@@ -1,12 +1,15 @@
 "use client";
 // Home: loader de intro + carrusel del portafolio. Los datos salen del repo (hoy el mock).
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { repo, toPortfolio, type PortfolioItem } from "@bb/core";
-import { asset } from "@/lib/asset";
 import { mountCarousel } from "@/lib/carousel";
+import { resolve } from "@/lib/resolve";
 import { Loader } from "./Loader";
 
 export function Home() {
+  const router = useRouter();
   const [works, setWorks] = useState<PortfolioItem[] | null>(null);
   const stage = useRef<HTMLDivElement>(null);
   const detail = useRef<HTMLElement>(null);
@@ -21,9 +24,19 @@ export function Home() {
     return () => document.body.classList.remove("home");
   }, []);
 
-  // datos del portafolio; se recargan si el admin los cambia (otra pestaña del mismo sitio)
+  // datos del portafolio; se recargan si el admin los cambia (otra pestaña del mismo sitio).
+  // Solo se vuelve a armar el carrusel si cambió el contenido, no en cada aviso.
   useEffect(() => {
-    const load = () => repo.getDb().then((db) => setWorks(toPortfolio(db, asset)));
+    let last = "";
+    const load = () =>
+      repo.getDb().then((db) => {
+        const next = toPortfolio(db, resolve);
+        const sig = JSON.stringify(next);
+        if (sig !== last) {
+          last = sig;
+          setWorks(next);
+        }
+      });
     load();
     return repo.subscribe(load);
   }, []);
@@ -39,9 +52,10 @@ export function Home() {
         hudMeta: hudMeta.current!,
         hudCount: hudCount.current!,
       },
-      works
+      works,
+      (href) => router.push(href)
     );
-  }, [works]);
+  }, [works, router]);
 
   return (
     <>
@@ -55,10 +69,25 @@ export function Home() {
             <div className="hud__meta eyebrow" ref={hudMeta} />
           </div>
           <div className="hud__right">
+            <Link href="/galeria" className="hud__cta">
+              Ver galería
+              <svg width="14" height="14" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M4 14h20M16 6l8 8-8 8" />
+              </svg>
+            </Link>
             <div className="hud__count" ref={hudCount} />
             <div className="hud__hint">Scroll para explorar · click para ver</div>
           </div>
         </div>
+
+        {works && works.length === 0 && (
+          <div className="home-empty">
+            <p className="eyebrow">Todavía no hay historias en el portafolio.</p>
+            <Link href="/galeria" className="btn btn--ghost">
+              Ver galería
+            </Link>
+          </div>
+        )}
 
         <aside className="detail" ref={detail} aria-hidden="true" data-nav-scroll>
           <div className="detail__inner" ref={detailInner} />

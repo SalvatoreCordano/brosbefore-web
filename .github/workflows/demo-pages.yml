@@ -1,0 +1,60 @@
+# Publica en GitHub Pages el sitio actual (rama main, en la raíz) + la demo del monorepo
+# (rama development) en /demo y el admin en /demo/admin.
+# Se corre a mano: Actions → "Demo en GitHub Pages" → Run workflow (elegir rama development).
+# Requisitos (una sola vez): Settings → Pages → Source: "GitHub Actions", y en
+# Settings → Environments → github-pages, permitir la rama development.
+name: Demo en GitHub Pages
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: _main
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+        env:
+          NEXT_PUBLIC_BASE_PATH: /${{ github.event.repository.name }}/demo
+      - name: Armar el sitio
+        run: |
+          mkdir -p _site/demo/admin
+          rsync -a --exclude '.git' --exclude '.github' --exclude 'node_modules' _main/ _site/
+          cp -r apps/web/out/. _site/demo/
+          cp -r apps/admin/out/. _site/demo/admin/
+          # GitHub Pages usa el 404.html de la raíz: el de la demo abre las fichas creadas en el admin
+          cp apps/web/out/404.html _site/404.html
+          # sin esto GitHub ignora la carpeta _next
+          touch _site/.nojekyll
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}demo/
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -3,6 +3,7 @@ import { Nav } from "@/components/Nav";
 import { asset } from "@/lib/asset";
 import { SITE } from "@/lib/site";
 import "./globals.css";
+import "./product.css";
 
 export const metadata: Metadata = {
   title: SITE.title,

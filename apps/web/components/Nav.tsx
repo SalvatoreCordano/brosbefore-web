@@ -1,5 +1,7 @@
 "use client";
-// Navbar compartido: logo + (sonido en la home) + tema + hamburguesa con menú desplegable.
+// Navbar. Home: el de siempre (logo, sonido, tema, hamburguesa) + botón Portal.
+// Resto de páginas: enlaces Nosotros · Galería · Planes y el botón Portal destacado
+// (en móvil se colapsan en la hamburguesa). El portal de clientes tiene su propia barra.
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -8,11 +10,16 @@ import { SITE } from "@/lib/site";
 import { SoundToggle } from "./SoundToggle";
 import { ThemeToggle } from "./ThemeToggle";
 
-const LINKS = [
+const MENU = [
   { href: "/", label: "Inicio" },
   { href: "/nosotros", label: "Nosotros" },
+  { href: "/galeria", label: "Galería" },
   { href: "/planes", label: "Planes" },
 ];
+const INLINE = MENU.slice(1);
+
+const isCurrent = (pathname: string, href: string) =>
+  href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/");
 
 export function Nav() {
   const pathname = usePathname();
@@ -43,15 +50,31 @@ export function Nav() {
     return () => targets.forEach((t) => t.removeEventListener("scroll", onScroll));
   }, [pathname]);
 
+  if (pathname.startsWith("/portal")) return null;
+
   return (
     <>
-      <header className={`nav${scrolled ? " is-scrolled" : ""}`}>
+      <header className={`nav${scrolled ? " is-scrolled" : ""}${isHome ? "" : " nav--inner"}`}>
         <Link className="nav__logo" href="/" aria-label="brosbefore — inicio">
           <img src={asset("assets/logo.svg")} alt={SITE.name} />
         </Link>
+
+        {!isHome && (
+          <nav className="nav__links" aria-label="Secciones">
+            {INLINE.map((l) => (
+              <Link key={l.href} href={l.href} className={`nav__link${isCurrent(pathname, l.href) ? " is-current" : ""}`}>
+                {l.label}
+              </Link>
+            ))}
+          </nav>
+        )}
+
         <div className="nav__actions">
           {isHome && <SoundToggle />}
           <ThemeToggle />
+          <Link href="/portal" className={`nav__portal${isHome ? "" : " nav__portal--solid"}`}>
+            Portal
+          </Link>
           <button
             className="nav__burger"
             aria-label={open ? "Cerrar menú" : "Abrir menú"}
@@ -67,11 +90,11 @@ export function Nav() {
 
       <div className="menu" id="menu" aria-hidden={!open}>
         <nav className="menu__links">
-          {LINKS.map((l, i) => (
+          {MENU.map((l, i) => (
             <Link
               key={l.href}
               href={l.href}
-              className={`menu__link${pathname === l.href ? " is-current" : ""}`}
+              className={`menu__link${isCurrent(pathname, l.href) ? " is-current" : ""}`}
               style={{ "--i": i } as React.CSSProperties}
               onClick={() => setMenu(false)}
             >
@@ -80,7 +103,7 @@ export function Nav() {
             </Link>
           ))}
         </nav>
-        <div className="menu__foot" style={{ "--i": 3 } as React.CSSProperties}>
+        <div className="menu__foot" style={{ "--i": MENU.length } as React.CSSProperties}>
           <button type="button" className="btn btn--solid menu__cta">
             Contáctanos
           </button>
@@ -92,6 +115,9 @@ export function Nav() {
             </svg>
             Instagram
           </a>
+          <Link className="btn btn--ghost" href="/portal" onClick={() => setMenu(false)}>
+            Portal de clientes
+          </Link>
         </div>
       </div>
     </>

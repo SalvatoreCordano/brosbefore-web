@@ -13,23 +13,33 @@ Requiere Node 22 y pnpm 9.
 
 ```bash
 pnpm install
-pnpm dev            # web (puerto 3000) y admin (3001) a la vez
-pnpm dev:web        # solo la web
-pnpm dev:admin      # solo el admin
+pnpm dev            # web y admin a la vez → todo en http://localhost:3000 (admin en /admin)
 pnpm build          # export estático de las dos apps en apps/*/out
 ```
 
 | Carpeta | Qué es |
 |---|---|
-| `apps/web` | Web pública (home, `/nosotros`, `/planes`) y, más adelante, galería y portal de clientes |
-| `apps/admin` | Admin interno: métricas, parejas, portafolio |
-| `packages/core` | Modelo de datos, datos de ejemplo y capa de datos (`repo`) compartidos |
+| `apps/web` | Web pública y portal de clientes |
+| `apps/admin` | Admin interno (se sirve en `/admin`) |
+| `packages/core` | Modelo de datos, datos de ejemplo, capa de datos (`repo`), almacenamiento y utilidades de archivos |
 
-- **Datos:** todas las pantallas leen y escriben por `repo` (`packages/core/src/repo.ts`). Hoy es `MockRepo`, que guarda en `localStorage`; en `sandbox` se reemplaza por Supabase sin tocar las pantallas.
-- **Datos de ejemplo:** salen de `js/data.js`. Si cambia el contenido en `main`, traerlo y correr `pnpm seed:sync`.
+| Ruta | Pantalla |
+|---|---|
+| `/` | Home: carrusel del portafolio, "Ver galería", "Ver historia completa" |
+| `/galeria` · `/galeria/{pareja}` | Galería con filtro por cobertura · ficha pública de la pareja |
+| `/nosotros` · `/planes` | Con sus llamados a Galería / Planes / Conócenos (`/pricing` redirige a `/planes`) |
+| `/portal` | Portal de la pareja: Presentación, Archivos (descargas .zip) y Agradecimiento |
+| `/portal/login` · `/portal/registro?token=` · `/portal/recuperar` | Acceso (solo por invitación) |
+| `/admin` | Métricas · Parejas · Portafolio · Editor de historia (`/admin/historia?id=`) |
+
+**Cuentas de la demo** (también aparecen en la pantalla de login): ver `DEMO_ACCOUNTS` en
+`packages/core/src/seed/index.ts`. En el admin, "Restablecer demo" vuelve a los datos de ejemplo.
+
+- **Datos:** todas las pantallas leen y escriben por `repo` (`packages/core/src/repo.ts`). Hoy es `MockRepo` (`localStorage` + archivos en IndexedDB del navegador); en `sandbox` se reemplaza por Supabase + R2 sin tocar las pantallas.
+- **Datos de ejemplo:** salen de `js/data.js` más ejemplos de pedida, preboda, cuentas y testimonios. Si cambia el contenido en `main`, traerlo y correr `pnpm seed:sync`.
 - **Imágenes:** la fuente es `/assets`; cada app la copia a su `public/assets` al arrancar (no se commitea).
-- **Web y admin en local:** corren en puertos distintos, así que no comparten los datos de la demo. Publicados en el mismo dominio (GitHub Pages o Cloudflare), sí los comparten.
-- **Subruta:** para publicar bajo una ruta (ej. GitHub Pages) se define `NEXT_PUBLIC_BASE_PATH=/brosbefore-web/demo` al hacer `build`.
+- **Admin en local:** corre en el puerto 3001, pero la web lo sirve en `localhost:3000/admin` para que ambos compartan los datos de la demo (mismo origen).
+- **Publicar la demo:** workflow manual `.github/workflows/demo-pages.yml` (sitio actual en la raíz, demo en `/demo`, admin en `/demo/admin`). Usa `NEXT_PUBLIC_BASE_PATH`.
 
 ## Sitio estático (actual)
 

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Sidebar } from "@/components/Sidebar";
 import { asset } from "@/lib/asset";
 import "./admin.css";
+import "./editor.css";
 
 export const metadata: Metadata = {
   title: "Admin — (brosbefore)™",

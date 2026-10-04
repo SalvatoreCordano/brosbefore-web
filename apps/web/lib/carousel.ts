@@ -28,7 +28,7 @@ interface Pose {
 const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
-export function mountCarousel(els: CarouselEls, works: PortfolioItem[]): () => void {
+export function mountCarousel(els: CarouselEls, works: PortfolioItem[], navigate: (href: string) => void): () => void {
   const { stage, detail: detailEl, detailInner, hudTitle, hudMeta, hudCount } = els;
   const N = works.length;
   const ac = new AbortController();
@@ -239,6 +239,36 @@ export function mountCarousel(els: CarouselEls, works: PortfolioItem[]): () => v
     { passive: true }
   );
 
+  // portada animada: se reproduce cuando la card lleva 2 s como principal (solo en la home)
+  let motionTimer: ReturnType<typeof setTimeout> | undefined;
+  let motionEl: HTMLElement | null = null;
+  function stopMotion() {
+    if (motionTimer) clearTimeout(motionTimer);
+    motionEl?.remove();
+    motionEl = null;
+  }
+  function scheduleMotion(i: number) {
+    stopMotion();
+    const src = works[i].coverMotion;
+    if (!src || reduceMotion) return;
+    motionTimer = later(() => {
+      if (activeIndex() !== i || modeTarget !== 0) return;
+      const v = document.createElement("video");
+      Object.assign(v, { src, muted: true, loop: true, playsInline: true, autoplay: true, className: "card__motion" });
+      // si no es video (GIF), se muestra como imagen
+      v.onerror = () => {
+        const img = document.createElement("img");
+        img.src = src;
+        img.className = "card__motion";
+        v.replaceWith(img);
+        motionEl = img;
+      };
+      cards[i].appendChild(v);
+      v.play().catch(() => {});
+      motionEl = v;
+    }, 2000);
+  }
+
   let lastActive = -1;
   const activeIndex = () => wrap(Math.round(target));
   function onTargetChange() {
@@ -246,6 +276,7 @@ export function mountCarousel(els: CarouselEls, works: PortfolioItem[]): () => v
     if (i === lastActive) return;
     if (lastActive !== -1) sound.play();
     lastActive = i;
+    if (modeTarget === 0) scheduleMotion(i);
     const w = works[i];
     hudTitle.textContent = w.couple;
     hudMeta.textContent = `${w.place} — ${w.collection}`;
@@ -436,6 +467,11 @@ export function mountCarousel(els: CarouselEls, works: PortfolioItem[]): () => v
       <div class="detail__label eyebrow"><span>Fotografía</span><span>${w.photos.length} fotos</span></div>
       <div class="photos">${photoColumns(w)}</div>
 
+      <button class="detail__more" data-href="/galeria/${encodeURIComponent(w.id)}">
+        Ver historia completa
+        <svg width="16" height="16" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 14h20M16 6l8 8-8 8"/></svg>
+      </button>
+
       <button class="detail__next" data-next="${wrap(i + 1)}">
         <span><span class="eyebrow">Siguiente historia</span><strong>${esc(next.couple)}</strong></span>
         <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M4 14h20M16 6l8 8-8 8"/></svg>
@@ -471,6 +507,7 @@ export function mountCarousel(els: CarouselEls, works: PortfolioItem[]): () => v
     goToIndex(i);
     selected = -1;
     select(i, true);
+    stopMotion();
     modeTarget = 1;
     document.body.classList.add("is-detail");
     detailEl.setAttribute("aria-hidden", "false");
@@ -484,12 +521,18 @@ export function mountCarousel(els: CarouselEls, works: PortfolioItem[]): () => v
     detailEl.scrollTop = 0; // devuelve el navbar a transparente
     history.replaceState(history.state, "", location.pathname);
     document.title = homeTitle;
+    scheduleMotion(activeIndex());
     kick();
   }
 
   on(detailEl, "click", (e: MouseEvent) => {
     const t = e.target as HTMLElement;
     if (t.closest("[data-close]")) return close();
+    const more = t.closest<HTMLElement>("[data-href]");
+    if (more) {
+      document.body.classList.remove("is-detail");
+      return navigate(more.dataset.href!);
+    }
     const nextBtn = t.closest<HTMLElement>("[data-next]");
     if (nextBtn) {
       const i = Number(nextBtn.dataset.next);
@@ -554,6 +597,7 @@ export function mountCarousel(els: CarouselEls, works: PortfolioItem[]): () => v
   render();
 
   return () => {
+    stopMotion();
     ac.abort();
     timers.forEach(clearTimeout);
     cancelAnimationFrame(rafId);
