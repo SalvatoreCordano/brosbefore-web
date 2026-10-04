@@ -37,8 +37,8 @@ window.WORKS = [
   {
     id: "diego-ale",
     couple: "Diego & Ale",
-    // TODO: lugar, fecha, colección e historia todavía de ejemplo — reemplazar con los datos reales
-    place: "Texas, USA",
+    // TODO: fecha, colección e historia todavía de ejemplo — reemplazar con los datos reales
+    place: "Lima, Perú",
     date: "Octubre 2024",
     collection: "the story™",
     tags: ["Fotografía", "Story film"],
@@ -58,18 +58,23 @@ window.WORKS = [
   {
     id: "paul-gabriela",
     couple: "Paul & Gabriela",
-    // TODO: lugar, fecha, colección e historia todavía de ejemplo — reemplazar con los datos reales
+    // TODO: fecha, colección e historia todavía de ejemplo — reemplazar con los datos reales
     place: "Lima, Perú",
     date: "Diciembre 2024",
     collection: "essentials™",
     tags: ["Fotografía", "Highlight film"],
     story:
       "Texto de ejemplo. Aquí va la historia de la pareja: cómo se conocieron, qué querían para su día y qué momento nos marcó durante la cobertura.",
-    // TODO: fotos de ejemplo — usar 8 fotos de la galería zelmarreyes.pixieset.com/paulandgabriela
-    cover: img("paulgabriela"),
+    cover: "assets/works/paul-gabriela/01.jpg",
     video: "https://www.youtube.com/embed/5qCl7eJHBWk",
     poster: "https://img.youtube.com/vi/5qCl7eJHBWk/maxresdefault.jpg",
-    photos: gallery("paulgabriela"),
+    photos: [
+      { src: "assets/works/paul-gabriela/01.jpg", w: 640, h: 960 },
+      { src: "assets/works/paul-gabriela/02.jpg", w: 1600, h: 1067 },
+      { src: "assets/works/paul-gabriela/03.jpg", w: 640, h: 960 },
+      { src: "assets/works/paul-gabriela/04.jpg", w: 640, h: 960 },
+      { src: "assets/works/paul-gabriela/05.jpg", w: 640, h: 960 },
+    ],
   },
   {
     id: "mock-4",
