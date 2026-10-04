@@ -1,6 +1,7 @@
 // MOCK — reemplazar imágenes, textos y video cuando lleguen los archivos reales.
 // cover: foto del carrusel (vertical, ~4:5)
 // video: URL de embed (YouTube/Vimeo) o .mp4 — vacío = placeholder
+// poster: portada del video (opcional, si no usa la primera foto)
 // photos: galería de la cobertura
 const img = (seed, w = 900, h = 1125) => `https://picsum.photos/seed/bb-${seed}/${w}/${h}`;
 
@@ -21,10 +22,7 @@ window.WORKS = [
     story:
       "Una boda frente al mar, con el viento del desierto de testigo. Ceziel y Gianfranco querían algo honesto: sin poses, sin guion. Nos dejaron entrar a su día desde muy temprano y terminamos contando una historia de familia, sal y atardecer.",
     cover: "assets/works/ceziel-gianfranco/01.jpg",
-    // La música tiene copyright (LatinAutor/UMPG) y YouTube bloquea el embed fuera de su sitio,
-    // así que el play abre YouTube. Si suben una versión embebible, usar video: ".../embed/ID".
-    video: "",
-    watchUrl: "https://www.youtube.com/watch?v=yL7-UPrKCwg",
+    video: "https://www.youtube.com/embed/yL7-UPrKCwg",
     poster: "https://img.youtube.com/vi/yL7-UPrKCwg/maxresdefault.jpg",
     photos: [
       { src: "assets/works/ceziel-gianfranco/01.jpg", w: 1024, h: 1536 },
@@ -48,10 +46,7 @@ window.WORKS = [
       "Texto de ejemplo. Aquí va la historia de la pareja: cómo se conocieron, qué querían para su día y qué momento nos marcó durante la cobertura.",
     // TODO: fotos de ejemplo — usar 8 fotos de la galería zelmarreyes.pixieset.com/diegoandale
     cover: img("diegoale"),
-    // Se abre en YouTube (mismo criterio que Ceziel & Gianfranco). Si el embed está permitido,
-    // se puede cambiar a video: "https://www.youtube.com/embed/muZDcVTYJAI".
-    video: "",
-    watchUrl: "https://www.youtube.com/watch?v=muZDcVTYJAI",
+    video: "https://www.youtube.com/embed/muZDcVTYJAI",
     poster: "https://img.youtube.com/vi/muZDcVTYJAI/maxresdefault.jpg",
     photos: gallery("diegoale"),
   },
@@ -67,9 +62,7 @@ window.WORKS = [
       "Texto de ejemplo. Aquí va la historia de la pareja: cómo se conocieron, qué querían para su día y qué momento nos marcó durante la cobertura.",
     // TODO: fotos de ejemplo — usar 8 fotos de la galería zelmarreyes.pixieset.com/paulandgabriela
     cover: img("paulgabriela"),
-    // Se abre en YouTube. Si el embed está permitido: video: "https://www.youtube.com/embed/5qCl7eJHBWk".
-    video: "",
-    watchUrl: "https://www.youtube.com/watch?v=5qCl7eJHBWk",
+    video: "https://www.youtube.com/embed/5qCl7eJHBWk",
     poster: "https://img.youtube.com/vi/5qCl7eJHBWk/maxresdefault.jpg",
     photos: gallery("paulgabriela"),
   },

@@ -343,20 +343,12 @@
       <p class="detail__story">${w.story}</p>
 
       <div class="detail__label eyebrow"><span>Film</span><span>${w.collection}</span></div>
-      <div class="video${w.watchUrl ? " is-external" : ""}" data-video>
+      <div class="video" data-video>
         <img src="${w.poster || photoSrc(w.photos[0])}" alt="" loading="lazy" />
-        ${
-          w.watchUrl
-            ? // video que no se puede embeber (p. ej. música con copyright): se abre en YouTube
-              `<a class="video__play" href="${w.watchUrl}" target="_blank" rel="noopener" aria-label="Ver el film de ${w.couple} en YouTube">
-          <span><svg width="20" height="22" viewBox="0 0 20 22" aria-hidden="true"><path d="M2 1.5v19L19 11z" fill="#1b1916"/></svg></span>
-        </a>
-        <span class="video__note">Ver en YouTube ↗</span>`
-            : `<button class="video__play" aria-label="Reproducir film de ${w.couple}">
+        <button class="video__play" aria-label="Reproducir film de ${w.couple}">
           <span><svg width="20" height="22" viewBox="0 0 20 22" aria-hidden="true"><path d="M2 1.5v19L19 11z" fill="#1b1916"/></svg></span>
         </button>
-        <span class="video__note">Video próximamente</span>`
-        }
+        <span class="video__note">Video próximamente</span>
       </div>
 
       <div class="detail__label eyebrow"><span>Fotografía</span><span>${w.photos.length} fotos</span></div>
@@ -424,7 +416,7 @@
       return;
     }
     const play = e.target.closest(".video__play");
-    if (play && play.tagName !== "A" && selected >= 0) {
+    if (play && selected >= 0) {
       const box = play.closest("[data-video]");
       const src = works[selected].video;
       if (!src) {
@@ -433,8 +425,34 @@
       }
       box.innerHTML = /\.mp4($|\?)/.test(src)
         ? `<video src="${src}" controls autoplay playsinline></video>`
-        : `<iframe src="${src}${src.includes("?") ? "&" : "?"}autoplay=1&rel=0&playsinline=1" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
+        : `<iframe src="${src}${src.includes("?") ? "&" : "?"}autoplay=1&rel=0&playsinline=1&enablejsapi=1" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
+      const frame = box.querySelector("iframe");
+      // pide a YouTube que avise sus eventos (para detectar si el dueño bloqueó el embed)
+      frame?.addEventListener("load", () =>
+        frame.contentWindow.postMessage(JSON.stringify({ event: "listening", id: 1, channel: "widget" }), "*")
+      );
     }
+  });
+
+  // si YouTube no deja reproducir el video aquí (p. ej. música con copyright), aviso dentro del recuadro
+  window.addEventListener("message", (e) => {
+    if (!/^https:\/\/www\.youtube(-nocookie)?\.com$/.test(e.origin)) return;
+    let data;
+    try {
+      data = typeof e.data === "string" ? JSON.parse(e.data) : e.data;
+    } catch {
+      return;
+    }
+    if (data?.event !== "onError") return;
+    const box = [...detailEl.querySelectorAll("[data-video]")].find((b) => b.querySelector("iframe")?.contentWindow === e.source);
+    if (!box || selected < 0) return;
+    const w = works[selected];
+    const id = (w.video.match(/embed\/([\w-]+)/) || [])[1];
+    box.classList.add("is-blocked");
+    box.innerHTML = `<img src="${w.poster || photoSrc(w.photos[0])}" alt="" />
+      <a class="video__blocked" href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener">
+        Este film solo se puede ver en YouTube ↗
+      </a>`;
   });
 
   // ---------- sonido ----------
