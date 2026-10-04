@@ -37,34 +37,41 @@ window.WORKS = [
     ],
   },
   {
-    id: "ben-meg",
-    couple: "Ben & Meg",
+    id: "diego-ale",
+    couple: "Diego & Ale",
+    // TODO: lugar, fecha, colección e historia todavía de ejemplo — reemplazar con los datos reales
     place: "Texas, USA",
     date: "Octubre 2024",
     collection: "the story™",
-    tags: ["Fotografía", "Story film", "Pre-boda"],
+    tags: ["Fotografía", "Story film"],
     story:
-      "Dos días en Texas: una sesión pre-boda entre campos abiertos y un día de boda lleno de detalles pequeños. Ben y Meg se ríen igual que hace diez años, y eso fue lo que quisimos guardar.",
-    cover: img("benmeg"),
+      "Texto de ejemplo. Aquí va la historia de la pareja: cómo se conocieron, qué querían para su día y qué momento nos marcó durante la cobertura.",
+    // TODO: fotos de ejemplo — usar 8 fotos de la galería zelmarreyes.pixieset.com/diegoandale
+    cover: img("diegoale"),
     // Se abre en YouTube (mismo criterio que Ceziel & Gianfranco). Si el embed está permitido,
     // se puede cambiar a video: "https://www.youtube.com/embed/muZDcVTYJAI".
     video: "",
     watchUrl: "https://www.youtube.com/watch?v=muZDcVTYJAI",
     poster: "https://img.youtube.com/vi/muZDcVTYJAI/maxresdefault.jpg",
-    photos: gallery("benmeg"),
+    photos: gallery("diegoale"),
   },
   {
-    id: "talia-carlos",
-    couple: "Talia & Carlos",
+    id: "paul-gabriela",
+    couple: "Paul & Gabriela",
+    // TODO: lugar, fecha, colección e historia todavía de ejemplo — reemplazar con los datos reales
     place: "Lima, Perú",
     date: "Diciembre 2024",
     collection: "essentials™",
     tags: ["Fotografía", "Highlight film"],
     story:
-      "Una celebración íntima en Lima, rodeados de las personas que más quieren. Lo esencial, tal como fue: miradas, abrazos y una pista de baile que no se vació hasta el final.",
-    cover: img("talia"),
+      "Texto de ejemplo. Aquí va la historia de la pareja: cómo se conocieron, qué querían para su día y qué momento nos marcó durante la cobertura.",
+    // TODO: fotos de ejemplo — usar 8 fotos de la galería zelmarreyes.pixieset.com/paulandgabriela
+    cover: img("paulgabriela"),
+    // Se abre en YouTube. Si el embed está permitido: video: "https://www.youtube.com/embed/5qCl7eJHBWk".
     video: "",
-    photos: gallery("talia"),
+    watchUrl: "https://www.youtube.com/watch?v=5qCl7eJHBWk",
+    poster: "https://img.youtube.com/vi/5qCl7eJHBWk/maxresdefault.jpg",
+    photos: gallery("paulgabriela"),
   },
   {
     id: "mock-4",
