@@ -8,6 +8,7 @@ import { repo, toDownloads, toPresentation, type Session } from "@bb/core";
 import { asset, BASE_PATH } from "@/lib/asset";
 import { resolve } from "@/lib/resolve";
 import { useDb } from "@/lib/use-db";
+import { ThemeToggle } from "../ThemeToggle";
 import { Downloads } from "./Downloads";
 import { PresentationView } from "./PresentationView";
 import { Thanks } from "./Thanks";
@@ -115,6 +116,7 @@ export function PortalApp() {
           </nav>
         )}
         <div className="portal__actions">
+          <ThemeToggle />
           {!suspended && couple.inGallery && (
             <button type="button" className="btn btn--ghost btn--sm" onClick={share}>
               Compartir

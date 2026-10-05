@@ -555,6 +555,14 @@
 @media (max-width: 767px) {
   .portal__bar {
     flex-wrap: wrap;
+    gap: 10px 8px;
+    padding: 12px var(--gutter);
+  }
+  .portal__actions {
+    gap: 4px;
+  }
+  .portal__actions .btn--sm {
+    padding: 0 12px;
   }
   .portal__tabs {
     order: 3;
@@ -986,4 +994,13 @@
 /* la foto de Nosotros mantiene su recuadro 4:5 aunque el <img> declare su tamaño real */
 .about__img {
   height: auto;
+}
+
+/* celular: con el detalle de una pareja abierto, el botón flotante taparía el texto */
+@media (max-width: 767px) {
+  .is-detail .fab {
+    opacity: 0;
+    transform: translate(8px, -50%);
+    pointer-events: none;
+  }
 }

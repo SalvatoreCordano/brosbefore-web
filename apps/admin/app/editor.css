@@ -967,6 +967,49 @@
 }
 
 @media (max-width: 860px) {
+  /* Anterior / Siguiente se reparten el ancho y el texto puede ocupar dos líneas */
+  .editor__foot .btn {
+    flex: 1 1 0;
+    min-width: 0;
+    height: auto;
+    min-height: 42px;
+    padding: 10px 14px;
+    white-space: normal;
+    text-align: center;
+  }
+  /* correos de la pareja: el correo usa todo el ancho y el estado baja a la línea siguiente */
+  .member__main {
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+  .member__input {
+    flex: 1 1 200px;
+    max-width: none;
+  }
+  .members__foot {
+    flex-wrap: wrap;
+  }
+  /* encabezado de cada momento: el nombre usa el espacio libre y lo demás no se aprieta */
+  .moment-block__head {
+    flex-wrap: wrap;
+    gap: 6px 10px;
+  }
+  .moment-name {
+    width: auto;
+    flex: 1 1 140px;
+  }
+  .moment-block__head .eyebrow {
+    white-space: nowrap;
+  }
+  /* la barra de pasos se desliza: el borde se desvanece para indicar que hay más */
+  .steps {
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to right, #000 85%, transparent);
+    mask-image: linear-gradient(to right, #000 85%, transparent);
+  }
+  .steps::-webkit-scrollbar {
+    display: none;
+  }
   .testi__edit,
   .form-grid--2 {
     grid-template-columns: 1fr;

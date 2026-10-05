@@ -1,5 +1,5 @@
 "use client";
-// Botón flotante con los ajustes de visualización: tema claro/oscuro y (en la home) sonido.
+// Botón flotante de la home con los ajustes de visualización: sonido y tema claro/oscuro.
 // A la mitad de la pantalla en el borde derecho; se oculta con el menú abierto
 // y respeta el área segura de los celulares.
 import { usePathname } from "next/navigation";
@@ -9,8 +9,8 @@ import { ThemeToggle } from "./ThemeToggle";
 export function FloatingControls() {
   const pathname = usePathname();
   const isHome = pathname === "/";
-  // en las páginas internas el tema va en el navbar; el flotante queda para la home y el portal
-  if (!isHome && !pathname.startsWith("/portal")) return null;
+  // fuera de la home el tema va en la barra de arriba (navbar o barra del portal)
+  if (!isHome) return null;
   return (
     <div className="fab" role="group" aria-label="Ajustes de visualización">
       {isHome && <SoundToggle />}

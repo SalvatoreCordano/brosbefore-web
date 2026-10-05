@@ -37,6 +37,11 @@ export function StoryEditor() {
     if (paso && STEPS.some((s) => s.id === paso)) setStep(paso);
   }, []);
 
+  // en celular la barra de pasos se desliza: el paso activo siempre queda a la vista
+  useEffect(() => {
+    document.querySelector(".steps__btn.is-on")?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+  }, [step, id]);
+
   const go = (s: EditorStep) => {
     setStep(s);
     setShowChecklist(false);

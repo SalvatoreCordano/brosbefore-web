@@ -365,8 +365,12 @@ h2 {
 
 /* ---------- Responsive ---------- */
 @media (max-width: 860px) {
+  /* minmax(0, 1fr): sin esto, el contenido ancho (pasos del editor, grillas) estira la página */
   .shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .main {
+    min-width: 0;
   }
   .sidebar {
     position: static;
@@ -381,6 +385,11 @@ h2 {
   }
   .sidebar__nav {
     flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .sidebar__link {
+    padding: 8px 10px;
   }
   .sidebar__foot {
     display: none;
