@@ -69,7 +69,7 @@ export function Home() {
           <div className="hud__right">
             <Link href="/galeria" className="hud__cta">
               Ver galería
-              <svg width="14" height="14" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <path d="M4 14h20M16 6l8 8-8 8" />
               </svg>
             </Link>
