@@ -1,13 +1,14 @@
-# Publica en GitHub Pages el sitio actual (rama main, en la raíz) + la demo del monorepo
-# (rama development) en /demo y el admin en /demo/admin.
-# Corre solo en cada push a main o development (también a mano desde Actions).
-# Requisitos (una sola vez): Settings → Pages → Source: "GitHub Actions", y en
-# Settings → Environments → github-pages, permitir las ramas main y development.
-name: Demo en GitHub Pages
+# Publica el sitio en GitHub Pages desde la rama main:
+#   raíz   → web pública + portal de clientes (apps/web)
+#   /admin → admin interno (apps/admin)
+# Solo main publica, para que lo que se prueba en development no pise el sitio en vivo.
+# Requisitos (ya configurados): Settings → Pages → Source: "GitHub Actions" y el entorno
+# github-pages con la rama main permitida.
+name: Publicar en GitHub Pages
 
 on:
   push:
-    branches: [main, development]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -24,12 +25,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: development
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-          path: _main
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -38,15 +33,12 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
         env:
-          NEXT_PUBLIC_BASE_PATH: /${{ github.event.repository.name }}/demo
+          NEXT_PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
       - name: Armar el sitio
         run: |
-          mkdir -p _site/demo/admin
-          rsync -a --exclude '.git' --exclude '.github' --exclude 'node_modules' _main/ _site/
-          cp -r apps/web/out/. _site/demo/
-          cp -r apps/admin/out/. _site/demo/admin/
-          # GitHub Pages usa el 404.html de la raíz: el de la demo abre las fichas creadas en el admin
-          cp apps/web/out/404.html _site/404.html
+          mkdir -p _site/admin
+          cp -r apps/web/out/. _site/
+          cp -r apps/admin/out/. _site/admin/
           # sin esto GitHub ignora la carpeta _next
           touch _site/.nojekyll
       - uses: actions/upload-pages-artifact@v3
@@ -58,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}demo/
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
