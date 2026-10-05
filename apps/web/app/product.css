@@ -97,23 +97,25 @@
 }
 
 /* ---------- Navbar ---------- */
-/* Portal: el llamado principal del navbar (sólido, con ícono) */
+/* Portal: transparente con borde (el sólido queda para "Ver galería") */
 .nav__portal {
   height: 40px;
   padding: 0 18px;
   margin: 0 6px 0 4px;
   border-radius: 999px;
-  background: var(--ink);
-  color: var(--bg);
+  background: transparent;
+  border: 1px solid var(--ink);
+  color: var(--ink);
   display: inline-flex;
   align-items: center;
   gap: 8px;
   font-size: 14px;
   white-space: nowrap;
-  transition: background 0.3s, transform 0.3s var(--ease);
+  transition: background 0.3s, color 0.3s, transform 0.3s var(--ease);
 }
 .nav__portal:hover {
-  background: var(--ink-hover);
+  background: var(--ink);
+  color: var(--bg);
 }
 .nav__portal:active {
   transform: scale(0.97);
