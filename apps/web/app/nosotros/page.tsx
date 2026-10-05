@@ -12,8 +12,8 @@ const TEAM = [
     role: "Fotografía",
     instagram: "zelmarrw",
     photo: "assets/nosotros/zelmar.jpg",
-    w: 1080,
-    h: 1440,
+    w: 1440,
+    h: 1800,
     bio: "Busca lo que pasa entre una foto y otra: miradas, gestos y detalles que duran un segundo. Retratos honestos, sin poses forzadas.",
   },
   {
@@ -21,8 +21,8 @@ const TEAM = [
     role: "Video y edición",
     instagram: "carozzi8",
     photo: "assets/nosotros/carozzi.jpg",
-    w: 1440,
-    h: 1800,
+    w: 1080,
+    h: 1440,
     bio: "Graba escenas atípicas y las compone en films que se sienten como la película de la pareja: con ritmo, música y emoción.",
   },
 ];
