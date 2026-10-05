@@ -16,7 +16,6 @@ export function Home() {
   const detailInner = useRef<HTMLDivElement>(null);
   const hudTitle = useRef<HTMLDivElement>(null);
   const hudMeta = useRef<HTMLDivElement>(null);
-  const hudCount = useRef<HTMLDivElement>(null);
 
   // el body de la home no scrollea (todo pasa en el carrusel y en el panel de detalle)
   useEffect(() => {
@@ -50,7 +49,6 @@ export function Home() {
         detailInner: detailInner.current!,
         hudTitle: hudTitle.current!,
         hudMeta: hudMeta.current!,
-        hudCount: hudCount.current!,
       },
       works,
       (href) => router.push(href)
@@ -75,8 +73,6 @@ export function Home() {
                 <path d="M4 14h20M16 6l8 8-8 8" />
               </svg>
             </Link>
-            <div className="hud__count" ref={hudCount} />
-            <div className="hud__hint">Scroll para explorar · click para ver</div>
           </div>
         </div>
 

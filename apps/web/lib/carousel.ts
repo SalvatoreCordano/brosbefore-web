@@ -10,7 +10,6 @@ export interface CarouselEls {
   detailInner: HTMLElement;
   hudTitle: HTMLElement;
   hudMeta: HTMLElement;
-  hudCount: HTMLElement;
 }
 
 interface Pose {
@@ -29,7 +28,7 @@ const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
 export function mountCarousel(els: CarouselEls, works: PortfolioItem[], navigate: (href: string) => void): () => void {
-  const { stage, detail: detailEl, detailInner, hudTitle, hudMeta, hudCount } = els;
+  const { stage, detail: detailEl, detailInner, hudTitle, hudMeta } = els;
   const N = works.length;
   const ac = new AbortController();
   const on = <K extends keyof HTMLElementEventMap>(
@@ -280,7 +279,6 @@ export function mountCarousel(els: CarouselEls, works: PortfolioItem[], navigate
     const w = works[i];
     hudTitle.textContent = w.couple;
     hudMeta.textContent = `${w.place} — ${w.collection}`;
-    hudCount.textContent = `${pad(i + 1)} / ${pad(N)}`;
     if (modeTarget === 1) scheduleSelect(i);
   }
   function goTo(t: number) {
