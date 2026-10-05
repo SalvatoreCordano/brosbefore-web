@@ -97,32 +97,99 @@
 }
 
 /* ---------- Navbar ---------- */
+/* Portal: el llamado principal del navbar (sólido, con ícono) */
 .nav__portal {
-  height: 34px;
-  padding: 0 14px;
-  margin: 0 4px;
+  height: 40px;
+  padding: 0 18px;
+  margin: 0 6px 0 4px;
   border-radius: 999px;
-  border: 1px solid var(--line);
+  background: var(--ink);
+  color: var(--bg);
   display: inline-flex;
   align-items: center;
-  font-size: 13px;
-  transition: background 0.3s, border-color 0.3s, color 0.3s;
+  gap: 8px;
+  font-size: 14px;
+  white-space: nowrap;
+  transition: background 0.3s, transform 0.3s var(--ease);
 }
 .nav__portal:hover {
-  border-color: var(--ink);
-}
-.nav__portal--solid {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--bg);
-}
-.nav__portal--solid:hover {
   background: var(--ink-hover);
+}
+.nav__portal:active {
+  transform: scale(0.97);
+}
+.nav__portal:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
 }
 .menu-open .nav__portal {
   opacity: 0;
   pointer-events: none;
 }
+@media (max-width: 599px) {
+  .nav__portal {
+    height: 36px;
+    padding: 0 14px;
+  }
+  .nav__portal-long {
+    display: none;
+  }
+}
+
+/* ---------- Botón flotante: tema y sonido ----------
+   Abajo a la derecha, sobre los botones fijos de la página (Ver galería / música),
+   blancos táctiles de 44px, foco visible y respeto del área segura del celular. */
+.fab {
+  position: fixed;
+  right: max(var(--gutter), env(safe-area-inset-right));
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  z-index: 2500;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  box-shadow: 0 6px 20px rgba(15, 14, 13, 0.08);
+  transition: opacity 0.3s var(--ease), transform 0.4s var(--ease);
+}
+.fab--raised {
+  bottom: calc(84px + env(safe-area-inset-bottom));
+}
+.fab__btn {
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  transition: background 0.2s;
+}
+.fab__btn:hover {
+  background: var(--soft);
+}
+.fab__btn:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+.fab .sound.is-off {
+  color: var(--muted);
+}
+.menu-open .fab,
+.is-intro .fab {
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+}
+@media print {
+  .fab {
+    display: none;
+  }
+}
+
 .nav__links {
   display: flex;
   gap: 28px;

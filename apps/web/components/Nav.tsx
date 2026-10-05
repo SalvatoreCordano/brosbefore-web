@@ -1,5 +1,5 @@
 "use client";
-// Navbar. Home: el de siempre (logo, sonido, tema, hamburguesa) + botón Portal.
+// Navbar. Home: logo, botón Portal y hamburguesa (tema y sonido van en el botón flotante).
 // Resto de páginas: enlaces Nosotros · Galería · Planes y el botón Portal destacado
 // (en móvil se colapsan en la hamburguesa). El portal de clientes tiene su propia barra.
 import Link from "next/link";
@@ -7,8 +7,6 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { asset } from "@/lib/asset";
 import { SITE } from "@/lib/site";
-import { SoundToggle } from "./SoundToggle";
-import { ThemeToggle } from "./ThemeToggle";
 
 const MENU = [
   { href: "/", label: "Inicio" },
@@ -70,10 +68,14 @@ export function Nav() {
         )}
 
         <div className="nav__actions">
-          {isHome && <SoundToggle />}
-          <ThemeToggle />
-          <Link href="/portal" className={`nav__portal${isHome ? "" : " nav__portal--solid"}`}>
-            Portal
+          <Link href="/portal" className="nav__portal">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 21a8 8 0 0 1 16 0" />
+            </svg>
+            <span>
+              Portal<span className="nav__portal-long"> de clientes</span>
+            </span>
           </Link>
           <button
             className="nav__burger"

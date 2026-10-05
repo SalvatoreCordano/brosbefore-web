@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { FloatingControls } from "@/components/FloatingControls";
 import { Nav } from "@/components/Nav";
 import { asset } from "@/lib/asset";
 import { SITE } from "@/lib/site";
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <Nav />
         {children}
+        <FloatingControls />
       </body>
     </html>
   );

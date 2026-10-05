@@ -23,7 +23,7 @@ export function ThemeToggle() {
   const dark = theme === "dark";
   const label = dark ? "Cambiar a modo claro" : "Cambiar a modo oscuro";
   return (
-    <button type="button" className="theme-toggle" onClick={toggle} aria-label={label} title={label}>
+    <button type="button" className="fab__btn theme-toggle" onClick={toggle} aria-label={label} title={label}>
       {dark ? (
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
           <circle cx="12" cy="12" r="4" />
