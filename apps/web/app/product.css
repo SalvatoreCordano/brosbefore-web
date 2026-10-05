@@ -982,3 +982,8 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* la foto de Nosotros mantiene su recuadro 4:5 aunque el <img> declare su tamaño real */
+.about__img {
+  height: auto;
+}

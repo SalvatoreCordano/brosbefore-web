@@ -39,7 +39,7 @@ export default function Nosotros() {
         </h1>
 
         <section className="about">
-          <img className="about__img" src={asset("assets/nosotros/equipo.webp")} alt="Carozzi y Zelmar, el equipo de brosbefore" width={1341} height={1985} />
+          <img className="about__img" src={asset("assets/nosotros/equipo.webp")} alt="Carozzi y Zelmar, el equipo de brosbefore" width={1341} height={1985} style={{ objectPosition: "50% 90%" }} />
           <div>
             <p className="about__lead">
               Somos Carozzi &amp; Zelmar. Filmmakers y fotógrafos, pero antes que todo, amigos desde hace años.
