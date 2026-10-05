@@ -1,5 +1,6 @@
 "use client";
 // Navbar. Home: logo, botón Portal y hamburguesa (tema y sonido van en el botón flotante).
+// Páginas internas: el cambio de tema va en el navbar, junto al Portal.
 // Resto de páginas: enlaces Nosotros · Galería · Planes y el botón Portal destacado
 // (en móvil se colapsan en la hamburguesa). El portal de clientes tiene su propia barra.
 import Link from "next/link";
@@ -7,6 +8,7 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { asset } from "@/lib/asset";
 import { SITE } from "@/lib/site";
+import { ThemeToggle } from "./ThemeToggle";
 
 const MENU = [
   { href: "/", label: "Inicio" },
@@ -68,6 +70,7 @@ export function Nav() {
         )}
 
         <div className="nav__actions">
+          {!isHome && <ThemeToggle />}
           <Link href="/portal" className="nav__portal">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
               <circle cx="12" cy="8" r="4" />

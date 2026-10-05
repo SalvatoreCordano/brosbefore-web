@@ -438,7 +438,6 @@ export function mountCarousel(els: CarouselEls, works: PortfolioItem[], navigate
   }
 
   function detailHTML(w: PortfolioItem, i: number) {
-    const next = works[wrap(i + 1)];
     const poster = w.poster || w.photos[0]?.src || w.cover;
     return `
       <div class="detail__top">
@@ -465,13 +464,8 @@ export function mountCarousel(els: CarouselEls, works: PortfolioItem[], navigate
       <div class="detail__label eyebrow"><span>Fotografía</span><span>${w.photos.length} fotos</span></div>
       <div class="photos">${photoColumns(w)}</div>
 
-      <button class="detail__more" data-href="/galeria/${encodeURIComponent(w.id)}">
-        Ver historia completa
-        <svg width="16" height="16" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 14h20M16 6l8 8-8 8"/></svg>
-      </button>
-
-      <button class="detail__next" data-next="${wrap(i + 1)}">
-        <span><span class="eyebrow">Siguiente historia</span><strong>${esc(next.couple)}</strong></span>
+      <button class="detail__next" data-href="/galeria/${encodeURIComponent(w.id)}">
+        <span><span class="eyebrow">Ver historia completa</span><strong>${esc(w.couple)}</strong></span>
         <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M4 14h20M16 6l8 8-8 8"/></svg>
       </button>
     `;
@@ -530,13 +524,6 @@ export function mountCarousel(els: CarouselEls, works: PortfolioItem[], navigate
     if (more) {
       document.body.classList.remove("is-detail");
       return navigate(more.dataset.href!);
-    }
-    const nextBtn = t.closest<HTMLElement>("[data-next]");
-    if (nextBtn) {
-      const i = Number(nextBtn.dataset.next);
-      goToIndex(i);
-      select(i);
-      return;
     }
     const play = t.closest(".video__play");
     if (play && selected >= 0) {
