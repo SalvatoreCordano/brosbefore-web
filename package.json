@@ -7,8 +7,7 @@
     "dev:web": "turbo run dev --filter=@bb/web",
     "dev:admin": "turbo run dev --filter=@bb/admin",
     "build": "turbo run build",
-    "typecheck": "turbo run typecheck",
-    "seed:sync": "node scripts/sync-seed.mjs"
+    "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
     "turbo": "^2.11.7",

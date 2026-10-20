@@ -1,4 +1,4 @@
-// GENERADO por scripts/sync-seed.mjs desde js/data.js — no editar a mano.
+// Parejas del portafolio original (antes en el sitio estático, ya eliminado).
 import type { PortfolioItem } from "../types";
 
 export const legacyWorks: PortfolioItem[] = [
