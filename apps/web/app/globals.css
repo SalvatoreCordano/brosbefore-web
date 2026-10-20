@@ -1,3 +1,11 @@
+@font-face {
+  font-family: "Helvetica Neue LT Std";
+  src: url("../../../assets/fonts/HelveticaNeueLTStd-Roman.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   color-scheme: light;
   --bg: #ffffff;
@@ -12,7 +20,7 @@
   --radius: 18px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --gutter: clamp(16px, 3vw, 40px);
-  --font: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font: "Helvetica Neue LT Std", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 /* Tema oscuro: solo si el visitante lo elige con el botón del navbar (por defecto, claro) */

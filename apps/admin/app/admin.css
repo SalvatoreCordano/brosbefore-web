@@ -1,3 +1,11 @@
+@font-face {
+  font-family: "Helvetica Neue LT Std";
+  src: url("../../../assets/fonts/HelveticaNeueLTStd-Roman.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Admin interno: mismos tokens que la web (apps/web/app/globals.css). */
 :root {
   color-scheme: light;
@@ -14,7 +22,7 @@
   --logo-filter: none;
   --radius: 14px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --font: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font: "Helvetica Neue LT Std", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
