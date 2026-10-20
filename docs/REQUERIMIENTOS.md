@@ -375,18 +375,16 @@ Para mostrar las tres coberturas, a una o dos parejas se les agregan una Preboda
 2. **El almacenamiento también pasa por una capa propia** (`storage`): `MockStorage` (navegador) → `R2Storage` (URLs firmadas).
 3. **El modelo de datos del mock es el mismo de la §13**, con los mismos nombres de tablas y campos.
 4. **Las rutas del mock son las rutas finales** (`/galeria/{pareja}`, `/portal`…). El admin vive en
-   `/admin` y en producción pasa a `admin.brosbefore.com`.
+   `/admin` y en producción pasa a `admin.brosbeforefilm.com`.
 
 ### Tecnología del mock
 - **Next.js desde el inicio**, en el **monorepo** que define el plan: `apps/web` (web pública +
   portal), `apps/admin` y `packages/` (tipos, `repo`, `storage` y datos de ejemplo compartidos).
   Así el mock es la base de la versión real y no se tira nada.
-- **Se publica en GitHub Pages** hasta tener las credenciales de Cloudflare Workers. Las dos apps
-  se exportan como sitio estático (`output: "export"`).
-- **GitHub Pages publica un solo sitio por repo:** el sitio actual (desde `main`) sigue en la raíz, y
-  el mock se publica en una subruta (ej. `/brosbefore-web/demo/` y `/brosbefore-web/demo/admin/`)
-  con un workflow de GitHub Actions. Para eso, en *Settings → Pages*, la fuente pasa de "rama `main`"
-  a "GitHub Actions" (un cambio único que hace el dueño del repo).
+- **Se publica en Cloudflare Workers como assets estáticos** (`apps/*/wrangler.jsonc`): la web en
+  `brosbeforefilm.com` y el admin en `admin.brosbeforefilm.com`. Las dos apps se exportan como sitio
+  estático (`output: "export"`). Hasta el corte, GitHub Pages sigue publicando desde `main`
+  (workflow `.github/workflows/demo-pages.yml`).
 - **Limitación de un sitio estático:** las fichas de las parejas de ejemplo se generan de antemano;
   las que se creen en el admin durante una demo (guardadas en el navegador) se abren con una ruta de
   respaldo que lee los datos del navegador. En Workers esa limitación desaparece.
@@ -432,6 +430,7 @@ de **su** `couple_id`, y solo puede escribir su propio testimonio (RLS en Supaba
 |---|---|
 | 2026-10-04 | El mock se construye en **Next.js** desde el inicio (monorepo del plan). |
 | 2026-10-04 | El mock se publica en **GitHub Pages**; pasa a **Cloudflare Workers** cuando haya credenciales. |
+| 2026-10-20 | Ya hay credenciales: se publica en **Cloudflare Workers** (assets estáticos) en `brosbeforefilm.com`; GitHub Pages se desactiva tras el corte. |
 | 2026-10-04 | Portada animada: en la **home**, a los **2 s** de quedar como principal; en la **galería**, **al hacer hover**. |
 | 2026-10-04 | Los testimonios se **editan y publican sin aprobación** de la pareja; afuera se muestran firmados por la pareja. |
 | 2026-10-04 | Se acepta música con copyright en la presentación privada del portal. |

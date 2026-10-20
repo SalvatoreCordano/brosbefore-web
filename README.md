@@ -2,7 +2,7 @@
 
 Sitio de (brosbefore)™, fotografía y film de bodas.
 
-Monorepo de Next.js (`apps/`, `packages/`), hoy un mock interactivo con datos de ejemplo. GitHub Pages lo publica desde `main`.
+Monorepo de Next.js (`apps/`, `packages/`), hoy un mock interactivo con datos de ejemplo. GitHub Pages lo publica desde `main`; la migración a Cloudflare Workers (`brosbeforefilm.com`) está en curso, ver `PLAN-PRODUCCION.md`.
 
 ## Monorepo (Next.js)
 
@@ -38,3 +38,17 @@ pnpm build          # export estático de las dos apps en apps/*/out
 - **Admin en local:** corre en el puerto 3004, pero la web lo sirve en `localhost:3003/admin` para que ambos compartan los datos de la demo (mismo origen).
 - **Publicar:** `.github/workflows/demo-pages.yml` (web en la raíz, admin en `/admin`), solo desde `main`. Usa `NEXT_PUBLIC_BASE_PATH`.
 
+
+## Despliegue en Cloudflare
+
+Dos Workers con assets estáticos, creados desde Git (Workers & Pages → Import a repository), con la raíz del repo como carpeta de trabajo y la variable `NODE_VERSION=22`:
+
+| | Web | Admin |
+|---|---|---|
+| Nombre | `brosbefore-web` | `brosbefore-admin` |
+| Build | `pnpm --filter @bb/web build` | `pnpm --filter @bb/admin build` |
+| Deploy | `npx wrangler deploy --config apps/web/wrangler.jsonc` | `npx wrangler deploy --config apps/admin/wrangler.jsonc` |
+| Dominio | `brosbeforefilm.com` y `www` | `admin.brosbeforefilm.com` |
+| Variables extra | — | `NEXT_PUBLIC_ADMIN_PATH=/` y `NEXT_PUBLIC_WEB_URL=https://brosbeforefilm.com` |
+
+El admin va detrás de Cloudflare Access (también su URL `*.workers.dev`). Las cabeceras y la redirección de `/pricing` están en `apps/*/public/_headers` y `_redirects`.
