@@ -1,0 +1,6 @@
+-- Planes iniciales (los mismos de packages/core/src/seed). Se pueden editar después desde el SQL editor.
+insert into plans (id, name, description, price_from, includes) values
+  ('plan_essentials', 'essentials™', 'Lo esencial para recordar su día tal como fue.', 4500, '["El día de la boda, hasta 6 horas de cobertura continua","1 fotógrafo principal y 1 filmmaker","Galería online personalizada (+300 fotos)","Un highlight film (2:30 a 3 min)"]'::jsonb),
+  ('plan_story', 'the story™', 'Para quienes quieren verse, sentirse y reconocerse en su historia.', 8000, '["2 días: sesión pre-boda (fotos y video) y el día de la boda (hasta 8 hrs)","1 fotógrafo principal y 1 filmmaker","Galería online personalizada (+500 fotos), algunas análogas (cámara a rollo)","Un story film (3 a 4:30 min)","Un wedding reel (en 24 hrs / 30 s)"]'::jsonb),
+  ('plan_legacy', 'the legacy™', 'Para quienes entienden que este recuerdo no es solo para hoy.', 12000, '["2 días: sesión pre-boda (fotos y video) y el día de la boda (hasta 12 hrs)","2 fotógrafos y 2 filmmakers","Galería online personalizada (+800 fotos)","Galería análoga (+150 fotos en 35mm y 120mm)","Un legacy film (7 a 10 min)","Un wedding reel (en 24 hrs / 1 min)","Un dump de video (carrusel IG / 24 hrs / 5 videos colorizados)"]'::jsonb)
+on conflict (id) do nothing;

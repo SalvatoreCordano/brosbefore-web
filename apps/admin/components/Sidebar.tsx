@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { repo } from "@bb/core";
 import { asset, webUrl } from "@/lib/asset";
 
@@ -12,6 +13,11 @@ const NAV = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const [adminEmail, setAdminEmail] = useState("");
+  useEffect(() => {
+    repo.getAdmin().then((a) => setAdminEmail(a?.email ?? ""));
+  }, []);
+  const isMock = repo.mode === "mock";
   const reset = async () => {
     if (!confirm("¿Volver a los datos de ejemplo? Se pierden los cambios y archivos de esta demo.")) return;
     await repo.resetDemo();
@@ -37,14 +43,23 @@ export function Sidebar() {
         </a>
       </nav>
       <div className="sidebar__foot">
-        <span className="badge">Demo · datos de ejemplo</span>
-        <button type="button" className="link-btn" onClick={reset}>
-          Restablecer demo
-        </button>
+        {isMock && (
+          <>
+            <span className="badge">Demo · datos de ejemplo</span>
+            <button type="button" className="link-btn" onClick={reset}>
+              Restablecer demo
+            </button>
+          </>
+        )}
         <div className="sidebar__user">
-          <span className="avatar">CZ</span>
-          <span>Carozzi &amp; Zelmar</span>
+          <span className="avatar">{isMock ? "CZ" : (adminEmail[0] ?? "A").toUpperCase()}</span>
+          <span>{isMock ? "Carozzi & Zelmar" : adminEmail}</span>
         </div>
+        {!isMock && (
+          <button type="button" className="link-btn" onClick={() => repo.adminLogout()}>
+            Salir
+          </button>
+        )}
       </div>
     </aside>
   );

@@ -1,7 +1,8 @@
 // Capa de datos. Todas las pantallas leen y escriben por aquí.
-// Hoy: MockRepo (datos de ejemplo + localStorage + archivos en IndexedDB).
-// En sandbox: SupabaseRepo con la misma interfaz. Los métodos ya son async para que
-// el cambio no toque las pantallas.
+// `DbRepo` tiene las reglas de negocio una sola vez; cada implementación solo cambia cómo se guarda:
+//   MockRepo (mock-repo.ts)         → datos de ejemplo + localStorage + archivos en IndexedDB
+//   SupabaseRepo (supabase-repo.ts) → Postgres con RLS + login de Supabase
+// `repo` (instance.ts) elige una según las variables de entorno.
 import type {
   Couple,
   CoverageType,
@@ -16,7 +17,6 @@ import type {
   PublicProfile,
   PublicScope,
 } from "./types";
-import { buildSeed, DB_VERSION } from "./seed";
 import { mediaUrls, storage } from "./storage";
 
 export interface NewFile {
@@ -41,6 +41,8 @@ export interface InviteLink {
 }
 
 export interface Repo {
+  /** "mock": datos de ejemplo en el navegador. "supabase": datos y accesos reales. */
+  readonly mode: "mock" | "supabase";
   getDb(): Promise<Db>;
   subscribe(listener: () => void): () => void;
   resetDemo(): Promise<void>;
@@ -95,13 +97,15 @@ export interface Repo {
   login(email: string, password: string): Promise<void>;
   logout(): Promise<void>;
   writeTestimonial(text: string): Promise<void>;
+
+  // ---- sesión del admin ----
+  getAdmin(): Promise<{ email: string } | null>;
+  adminLogin(email: string, password: string): Promise<void>;
+  adminLogout(): Promise<void>;
 }
 
-const STORAGE_KEY = "bb-mock-db";
-const SESSION_KEY = "bb-portal-session";
-
-const now = () => new Date().toISOString();
-const uid = (p: string) => `${p}_${crypto.randomUUID().slice(0, 8)}`;
+export const now = () => new Date().toISOString();
+export const uid = (p: string) => `${p}_${crypto.randomUUID().slice(0, 8)}`;
 export const slugify = (s: string) =>
   s
     .normalize("NFD")
@@ -118,17 +122,6 @@ export async function hashPassword(email: string, password: string) {
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-function readStored(): Db | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const db = JSON.parse(raw) as Db;
-    return db.version === DB_VERSION ? db : null; // si cambió el modelo, se descarta
-  } catch {
-    return null;
-  }
-}
-
 // ---------- consultas internas ----------
 const momentIdsOfCoverage = (db: Db, coverageId: Id) =>
   new Set(db.moments.filter((m) => m.coverageId === coverageId).map((m) => m.id));
@@ -139,42 +132,56 @@ export const filesOfCouple = (db: Db, coupleId: Id) => {
   return db.files.filter((f) => moments.has(f.momentId));
 };
 
-export class MockRepo implements Repo {
-  private db: Db | null = null;
-  private listeners = new Set<() => void>();
+export abstract class DbRepo implements Repo {
+  abstract readonly mode: "mock" | "supabase";
+  protected listeners = new Set<() => void>();
+  private lock: Promise<unknown> = Promise.resolve();
 
-  constructor() {
-    if (typeof window !== "undefined") {
-      // otra pestaña del mismo sitio (ej. admin ↔ web) cambió la base o la sesión
-      window.addEventListener("storage", (e) => {
-        if (e.key !== STORAGE_KEY && e.key !== SESSION_KEY) return;
-        if (e.key === STORAGE_KEY) this.db = null;
-        this.emit();
-      });
-      mediaUrls.subscribe(() => this.emit());
-    }
-  }
+  /** la base completa (puede tardar la primera vez); se cachea en memoria */
+  protected abstract load(): Promise<Db>;
+  protected abstract setCache(db: Db): void;
+  /** guarda lo que cambió entre `prev` y `next`; si falla, la operación se revierte */
+  protected abstract commit(prev: Db, next: Db): Promise<void>;
+  protected async afterCoupleDeleted(): Promise<void> {}
 
-  private load(): Db {
-    if (!this.db) this.db = (typeof window !== "undefined" && readStored()) || buildSeed();
-    return this.db;
-  }
-  private save() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.db));
-    } catch {
-      // navegación privada o sin espacio: el mock sigue funcionando en memoria
-    }
-    this.emit();
-  }
-  private emit() {
+  abstract resetDemo(): Promise<void>;
+  abstract getSession(): Promise<Session | null>;
+  abstract getInvite(token: string): Promise<{ email: string; names: string } | null>;
+  abstract registerWithInvite(token: string, name: string, password: string): Promise<void>;
+  abstract login(email: string, password: string): Promise<void>;
+  abstract logout(): Promise<void>;
+  abstract writeTestimonial(text: string): Promise<void>;
+  abstract getAdmin(): Promise<{ email: string } | null>;
+  abstract adminLogin(email: string, password: string): Promise<void>;
+  abstract adminLogout(): Promise<void>;
+
+  protected emit() {
     this.listeners.forEach((l) => l());
   }
-  private tx<T>(fn: (db: Db) => T): T {
-    const result = fn(this.load());
-    this.save();
-    return result;
+  subscribe(listener: () => void) {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
   }
+  async getDb() {
+    return structuredClone(await this.load());
+  }
+
+  /** Aplica un cambio sobre una copia, lo guarda y recién entonces lo deja visible. Una a la vez. */
+  protected tx<T>(fn: (db: Db) => T): Promise<T> {
+    const run = async () => {
+      const prev = await this.load();
+      const next = structuredClone(prev);
+      const result = fn(next);
+      await this.commit(prev, next);
+      this.setCache(next);
+      this.emit();
+      return result;
+    };
+    const p = this.lock.then(run, run);
+    this.lock = p.catch(() => {});
+    return p;
+  }
+
   private couple(db: Db, id: Id) {
     const c = db.couples.find((x) => x.id === id);
     if (!c) throw new Error("Pareja no encontrada");
@@ -197,23 +204,6 @@ export class MockRepo implements Repo {
     });
     // los archivos ya publicados en la presentación siguen hasta que se vuelva a publicar
     void storage.remove(keys);
-  }
-
-  async getDb() {
-    return structuredClone(this.load());
-  }
-  subscribe(listener: () => void) {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
-  }
-  async resetDemo() {
-    this.db = buildSeed();
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem(SESSION_KEY);
-    } catch {}
-    await storage.clear().catch(() => {});
-    this.emit();
   }
 
   // ---------- parejas ----------
@@ -260,7 +250,7 @@ export class MockRepo implements Repo {
   }
 
   async updateCouple(id: Id, patch: Partial<Pick<Couple, "names" | "slug" | "planId" | "location" | "weddingDate">>) {
-    this.tx((db) => {
+    await this.tx((db) => {
       const c = this.couple(db, id);
       if (patch.slug !== undefined) {
         const slug = slugify(patch.slug);
@@ -278,7 +268,7 @@ export class MockRepo implements Repo {
 
   async setCoverages(coupleId: Id, types: CoverageType[]) {
     if (!types.length) throw new Error("La historia necesita al menos una cobertura");
-    this.tx((db) => {
+    await this.tx((db) => {
       const c = this.couple(db, coupleId);
       const current = db.coverages.filter((cv) => cv.coupleId === coupleId);
       for (const cv of current.filter((cv) => !types.includes(cv.type))) {
@@ -302,14 +292,14 @@ export class MockRepo implements Repo {
   }
 
   async updateCoverage(id: Id, patch: { date?: string; location?: string }) {
-    this.tx((db) => {
+    await this.tx((db) => {
       const cv = db.coverages.find((x) => x.id === id);
       if (cv) Object.assign(cv, patch);
     });
   }
 
   async setCoupleVisibility(coupleId: Id, patch: { inGallery?: boolean; inPortfolio?: boolean }) {
-    this.tx((db) => {
+    await this.tx((db) => {
       const c = this.couple(db, coupleId);
       if (patch.inGallery !== undefined) c.inGallery = patch.inGallery;
       if (patch.inPortfolio !== undefined) {
@@ -337,7 +327,7 @@ export class MockRepo implements Repo {
   }
 
   async reorderPortfolio(coupleIds: Id[]) {
-    this.tx((db) => {
+    await this.tx((db) => {
       coupleIds.forEach((id, i) => {
         const c = db.couples.find((x) => x.id === id);
         if (c) c.portfolioOrder = i;
@@ -346,13 +336,13 @@ export class MockRepo implements Repo {
   }
 
   async setPortalStatus(coupleId: Id, status: PortalStatus) {
-    this.tx((db) => {
+    await this.tx((db) => {
       this.couple(db, coupleId).portalStatus = status;
     });
   }
 
   async deleteCouple(coupleId: Id) {
-    this.tx((db) => {
+    await this.tx((db) => {
       this.dropFiles(db, new Set(filesOfCouple(db, coupleId).map((f) => f.id)));
       const coverages = new Set(db.coverages.filter((c) => c.coupleId === coupleId).map((c) => c.id));
       const pres = db.presentations.find((p) => p.coupleId === coupleId);
@@ -367,7 +357,7 @@ export class MockRepo implements Repo {
       db.testimonials = db.testimonials.filter((t) => t.coupleId !== coupleId);
       db.couples = db.couples.filter((c) => c.id !== coupleId);
     });
-    if (localStorage.getItem(SESSION_KEY) && !(await this.getSession())) await this.logout();
+    await this.afterCoupleDeleted();
   }
 
   // ---------- archivos ----------
@@ -424,14 +414,14 @@ export class MockRepo implements Repo {
 
   async renameMoment(id: Id, name: string) {
     if (!name.trim()) throw new Error("El momento necesita un nombre");
-    this.tx((db) => {
+    await this.tx((db) => {
       const m = db.moments.find((x) => x.id === id);
       if (m) m.name = name.trim();
     });
   }
 
   async moveMoment(id: Id, dir: -1 | 1) {
-    this.tx((db) => {
+    await this.tx((db) => {
       const m = db.moments.find((x) => x.id === id);
       if (!m) return;
       const list = db.moments.filter((x) => x.coverageId === m.coverageId).sort((a, b) => a.order - b.order);
@@ -445,14 +435,14 @@ export class MockRepo implements Repo {
   }
 
   async deleteMoment(id: Id) {
-    this.tx((db) => {
+    await this.tx((db) => {
       this.dropFiles(db, new Set(db.files.filter((f) => f.momentId === id).map((f) => f.id)));
       db.moments = db.moments.filter((m) => m.id !== id);
     });
   }
 
   async moveFile(fileId: Id, toMomentId: Id) {
-    this.tx((db) => {
+    await this.tx((db) => {
       const f = db.files.find((x) => x.id === fileId);
       if (!f || f.momentId === toMomentId) return;
       f.momentId = toMomentId;
@@ -462,7 +452,7 @@ export class MockRepo implements Repo {
   }
 
   async shiftFile(fileId: Id, dir: -1 | 1) {
-    this.tx((db) => {
+    await this.tx((db) => {
       const f = db.files.find((x) => x.id === fileId);
       if (!f) return;
       const list = db.files.filter((x) => x.momentId === f.momentId).sort((a, b) => a.order - b.order);
@@ -476,11 +466,11 @@ export class MockRepo implements Repo {
   }
 
   async deleteFile(fileId: Id) {
-    this.tx((db) => this.dropFiles(db, new Set([fileId])));
+    await this.tx((db) => this.dropFiles(db, new Set([fileId])));
   }
 
   async publishFiles(coupleId: Id) {
-    this.tx((db) => filesOfCouple(db, coupleId).forEach((f) => (f.published = true)));
+    await this.tx((db) => filesOfCouple(db, coupleId).forEach((f) => (f.published = true)));
   }
 
   async uploadAsset(blob: Blob) {
@@ -491,7 +481,7 @@ export class MockRepo implements Repo {
 
   // ---------- presentación ----------
   async updatePresentation(coupleId: Id, patch: Partial<PresentationContent>) {
-    this.tx((db) => {
+    await this.tx((db) => {
       const p = db.presentations.find((x) => x.coupleId === coupleId);
       if (!p) throw new Error("Presentación no encontrada");
       Object.assign(p, patch, { updatedAt: now() });
@@ -499,7 +489,7 @@ export class MockRepo implements Repo {
   }
 
   async setPresItems(coverageId: Id, role: PresItemRole, fileIds: Id[]) {
-    this.tx((db) => {
+    await this.tx((db) => {
       db.presItems = db.presItems.filter((i) => !(i.coverageId === coverageId && i.role === role));
       fileIds.forEach((fileId, order) => db.presItems.push({ id: uid("pres"), coverageId, fileId, role, order }));
       const coupleId = db.coverages.find((c) => c.id === coverageId)?.coupleId;
@@ -509,7 +499,7 @@ export class MockRepo implements Repo {
   }
 
   async publishPresentation(coupleId: Id) {
-    this.tx((db) => {
+    await this.tx((db) => {
       const p = db.presentations.find((x) => x.coupleId === coupleId);
       if (!p) throw new Error("Presentación no encontrada");
       const coverages = new Set(db.coverages.filter((c) => c.coupleId === coupleId).map((c) => c.id));
@@ -528,28 +518,28 @@ export class MockRepo implements Repo {
 
   // ---------- ficha pública ----------
   async updatePublicProfile(coupleId: Id, patch: Partial<Omit<PublicProfile, "coupleId">>) {
-    this.tx((db) => {
+    await this.tx((db) => {
       const p = db.publicProfiles.find((x) => x.coupleId === coupleId);
       if (p) Object.assign(p, patch);
     });
   }
 
   async setCoverageFlags(coverageId: Id, patch: { showInGallery?: boolean; showInPortfolio?: boolean }) {
-    this.tx((db) => {
+    await this.tx((db) => {
       const cv = db.coverages.find((x) => x.id === coverageId);
       if (cv) Object.assign(cv, patch);
     });
   }
 
   async setPublicItems(coverageId: Id, scope: PublicScope, fileIds: Id[]) {
-    this.tx((db) => {
+    await this.tx((db) => {
       db.publicItems = db.publicItems.filter((i) => !(i.coverageId === coverageId && i.scope === scope));
       fileIds.forEach((fileId, order) => db.publicItems.push({ id: uid("pi"), coverageId, fileId, scope, order }));
     });
   }
 
   async setTags(coupleId: Id, names: string[]) {
-    this.tx((db) => {
+    await this.tx((db) => {
       db.coupleTags = db.coupleTags.filter((t) => t.coupleId !== coupleId);
       for (const raw of names) {
         const name = raw.trim();
@@ -569,14 +559,14 @@ export class MockRepo implements Repo {
   // ---------- agradecimientos ----------
   async repostTestimonial(id: Id, text: string) {
     if (!text.trim()) throw new Error("El texto no puede quedar vacío");
-    this.tx((db) => {
+    await this.tx((db) => {
       const t = db.testimonials.find((x) => x.id === id);
       if (t) Object.assign(t, { publishedText: text.trim(), reposted: true, updatedAt: now() });
     });
   }
 
   async unrepostTestimonial(id: Id) {
-    this.tx((db) => {
+    await this.tx((db) => {
       const t = db.testimonials.find((x) => x.id === id);
       if (t) Object.assign(t, { reposted: false, updatedAt: now() });
     });
@@ -607,7 +597,7 @@ export class MockRepo implements Repo {
   }
 
   async removeMember(memberId: Id) {
-    this.tx((db) => {
+    await this.tx((db) => {
       db.members = db.members.filter((m) => m.id !== memberId);
       db.testimonials = db.testimonials.filter((t) => t.memberId !== memberId);
     });
@@ -636,89 +626,12 @@ export class MockRepo implements Repo {
   }
 
   async revokeMember(memberId: Id) {
-    this.tx((db) => {
+    await this.tx((db) => {
       const m = db.members.find((x) => x.id === memberId);
       if (m) Object.assign(m, { status: "revoked", inviteToken: null });
     });
   }
-
-  // ---------- portal ----------
-  async getSession() {
-    let id: string | null = null;
-    try {
-      id = localStorage.getItem(SESSION_KEY);
-    } catch {}
-    if (!id) return null;
-    const db = this.load();
-    const member = db.members.find((m) => m.id === id && m.status === "active");
-    const couple = member && db.couples.find((c) => c.id === member.coupleId);
-    return member && couple ? structuredClone({ member, couple }) : null;
-  }
-
-  async getInvite(token: string) {
-    const db = this.load();
-    const m = db.members.find((x) => x.inviteToken === token && x.status === "invited");
-    const c = m && db.couples.find((x) => x.id === m.coupleId);
-    return m && c ? { email: m.email, names: c.names } : null;
-  }
-
-  async registerWithInvite(token: string, name: string, password: string) {
-    if (!name.trim()) throw new Error("Escribe tu nombre");
-    if (password.length < 8) throw new Error("La contraseña necesita al menos 8 caracteres");
-    const db = this.load();
-    const m = db.members.find((x) => x.inviteToken === token && x.status === "invited");
-    if (!m) throw new Error("Esta invitación ya no es válida. Pide una nueva a brosbefore.");
-    const passwordHash = await hashPassword(m.email, password);
-    this.tx(() => Object.assign(m, { name: name.trim(), status: "active", inviteToken: null, passwordHash }));
-    this.setSession(m.id);
-  }
-
-  async login(email: string, password: string) {
-    const clean = email.trim().toLowerCase();
-    const db = this.load();
-    const m = db.members.find((x) => x.email === clean && x.status === "active");
-    if (!m || m.passwordHash !== (await hashPassword(clean, password))) {
-      throw new Error("Correo o contraseña incorrectos");
-    }
-    this.setSession(m.id);
-  }
-
-  async logout() {
-    this.setSession(null);
-  }
-
-  private setSession(memberId: string | null) {
-    try {
-      if (memberId) localStorage.setItem(SESSION_KEY, memberId);
-      else localStorage.removeItem(SESSION_KEY);
-    } catch {}
-    this.emit();
-  }
-
-  async writeTestimonial(text: string) {
-    const session = await this.getSession();
-    if (!session) throw new Error("Tu sesión terminó, vuelve a entrar");
-    if (!text.trim()) throw new Error("Escribe tu agradecimiento");
-    this.tx((db) => {
-      const t = db.testimonials.find((x) => x.memberId === session.member.id);
-      if (t?.reposted) throw new Error("Tu agradecimiento ya está publicado y no se puede editar");
-      if (t) Object.assign(t, { originalText: text.trim(), updatedAt: now() });
-      else
-        db.testimonials.push({
-          id: uid("tes"),
-          coupleId: session.couple.id,
-          memberId: session.member.id,
-          originalText: text.trim(),
-          publishedText: "",
-          reposted: false,
-          updatedAt: now(),
-        });
-    });
-  }
 }
-
-/** Instancia única por app. En sandbox: `new SupabaseRepo(...)` según variables de entorno. */
-export const repo: Repo = new MockRepo();
 
 // usado por las vistas para encontrar la cobertura de un archivo
 export { coverageOfFile };

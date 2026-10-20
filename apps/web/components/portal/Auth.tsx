@@ -68,6 +68,7 @@ export function Login() {
         </Link>
       </form>
 
+      {repo.mode === "mock" && (
       <div className="demo-box">
         <span className="eyebrow">Cuentas de la demo</span>
         {DEMO_ACCOUNTS.map((a) => (
@@ -85,6 +86,7 @@ export function Login() {
           </button>
         ))}
       </div>
+      )}
     </AuthCard>
   );
 }
@@ -162,6 +164,16 @@ export function Register() {
 export function Recover() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  if (repo.mode === "supabase") {
+    // el envío automático de correos se conecta en otra etapa; mientras, se pide a brosbefore
+    return (
+      <AuthCard title="Recuperar contraseña" lead="Escríbenos a hola@brosbeforefilm.com desde tu correo y te ayudamos a restablecerla.">
+        <Link href="/portal/login" className="btn btn--ghost">
+          Volver a entrar
+        </Link>
+      </AuthCard>
+    );
+  }
   return (
     <AuthCard title="Recuperar contraseña" lead="Te enviaremos un enlace para crear una contraseña nueva.">
       {sent ? (
