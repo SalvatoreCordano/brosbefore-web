@@ -27,8 +27,7 @@ export function Sidebar() {
   return (
     <aside className="sidebar">
       <Link href="/" className="sidebar__logo" aria-label="Admin — inicio">
-        <img src={asset("assets/logo.svg")} alt="(brosbefore)™" />
-        <span className="eyebrow">Admin</span>
+        <img src={asset("assets/logo-admin.svg")} alt="(brosbefore)™ admin" />
       </Link>
       <nav className="sidebar__nav">
         {NAV.map((n) => {

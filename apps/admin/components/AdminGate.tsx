@@ -39,8 +39,7 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
   return (
     <main className="gate">
       <form className="gate__card" onSubmit={submit}>
-        <img className="gate__logo" src={asset("assets/logo.svg")} alt="(brosbefore)™" />
-        <span className="eyebrow">Admin</span>
+        <img className="gate__logo" src={asset("assets/logo-admin.svg")} alt="(brosbefore)™ admin" />
         <label className="field">
           <span className="field__label">Correo</span>
           <input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />

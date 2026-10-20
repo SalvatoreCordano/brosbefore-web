@@ -435,7 +435,7 @@ h2 {
   border-radius: var(--radius);
 }
 .gate__logo {
-  height: 18px;
+  height: 22px;
   width: auto;
   align-self: flex-start;
   filter: var(--logo-filter);
