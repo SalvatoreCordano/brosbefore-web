@@ -11,3 +11,6 @@ next-env.d.ts
 *.tsbuildinfo
 # assets copiados desde /assets en cada dev/build (la fuente es /assets)
 apps/*/public/assets/
+
+# wrangler
+.wrangler/
