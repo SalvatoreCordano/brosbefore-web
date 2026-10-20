@@ -9,7 +9,7 @@ import "./product.css";
 export const metadata: Metadata = {
   title: SITE.title,
   description: SITE.description,
-  icons: { icon: asset("assets/logo.svg") },
+  icons: { icon: asset("assets/iso.svg") },
 };
 
 export const viewport: Viewport = {

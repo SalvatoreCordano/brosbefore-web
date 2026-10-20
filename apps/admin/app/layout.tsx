@@ -6,7 +6,7 @@ import "./editor.css";
 
 export const metadata: Metadata = {
   title: "Admin — (brosbefore)™",
-  icons: { icon: asset("assets/logo.svg") },
+  icons: { icon: asset("assets/iso.svg") },
   robots: { index: false, follow: false },
 };
 
