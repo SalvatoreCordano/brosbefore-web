@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { repo } from "@bb/core";
 import { asset, webUrl } from "@/lib/asset";
+import { UNDER_CONSTRUCTION } from "@/lib/construction";
 
 const NAV = [
   { href: "/", label: "Métricas" },
@@ -38,7 +39,7 @@ export function Sidebar() {
             </Link>
           );
         })}
-        <a className="sidebar__link" href={webUrl("/")} target="_blank" rel="noopener">
+        <a className="sidebar__link" href={webUrl(UNDER_CONSTRUCTION ? "/web" : "/")} target="_blank" rel="noopener">
           Ver sitio ↗
         </a>
       </nav>

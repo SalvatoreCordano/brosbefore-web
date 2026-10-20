@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
+import { ConstructionGate } from "@/components/ConstructionGate";
 import { FloatingControls } from "@/components/FloatingControls";
 import { Nav } from "@/components/Nav";
 import { asset } from "@/lib/asset";
+import { UNDER_CONSTRUCTION } from "@/lib/construction";
 import { SITE } from "@/lib/site";
 import "./globals.css";
 import "./product.css";
@@ -10,6 +12,8 @@ export const metadata: Metadata = {
   title: SITE.title,
   description: SITE.description,
   icons: { icon: asset("assets/iso.svg") },
+  // en construcción no se indexa: la pantalla de construcción no debe aparecer en Google
+  ...(UNDER_CONSTRUCTION && { robots: { index: false, follow: false } }),
 };
 
 export const viewport: Viewport = {
@@ -30,9 +34,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: bootScript }} />
       </head>
       <body>
-        <Nav />
-        {children}
-        <FloatingControls />
+        <ConstructionGate>
+          <Nav />
+          {children}
+          <FloatingControls />
+        </ConstructionGate>
       </body>
     </html>
   );

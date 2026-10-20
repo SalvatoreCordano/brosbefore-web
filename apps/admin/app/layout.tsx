@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ConstructionGate } from "@/components/ConstructionGate";
 import { AdminGate } from "@/components/AdminGate";
 import { Sidebar } from "@/components/Sidebar";
 import { asset } from "@/lib/asset";
@@ -20,12 +21,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
-        <AdminGate>
-          <div className="shell">
-            <Sidebar />
-            <main className="main">{children}</main>
-          </div>
-        </AdminGate>
+        <ConstructionGate>
+          <AdminGate>
+            <div className="shell">
+              <Sidebar />
+              <main className="main">{children}</main>
+            </div>
+          </AdminGate>
+        </ConstructionGate>
       </body>
     </html>
   );
