@@ -207,7 +207,7 @@
   color: var(--ink);
 }
 @media (min-width: 900px) {
-  .nav--inner .nav__burger {
+  .nav__burger {
     display: none;
   }
 }

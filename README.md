@@ -84,12 +84,10 @@ Los assets estáticos (HTML, imágenes, fuentes) no cuentan en el límite de req
 
 ## Pantalla de construcción
 
-Mientras se arma el sitio, en **producción** la raíz de la web y del admin muestran una pantalla con solo el logo (sin enlaces). Se entra a mano:
+Mientras se arma el sitio, en **producción** la raíz del admin muestra una pantalla con solo el logo (sin enlaces). Se entra a mano:
 
 | Dónde | Ruta | Qué abre |
 |---|---|---|
-| Web | `/web` | Todo el sitio (deja una marca en el navegador para no volver a pedirla) |
-| Web | `/portal` | Solo el portal de clientes (sirve también el enlace de invitación, sin entrar antes) |
 | Admin | `/admin` | El admin (después sigue el login) |
 
-Es una barrera de navegación, **no seguridad**: quien conozca la ruta entra. La protección real del admin es Cloudflare Access y el login. En local no se activa; para probarla, `NEXT_PUBLIC_UNDER_CONSTRUCTION=1`. **Para abrir el sitio al público:** variable de compilación `NEXT_PUBLIC_UNDER_CONSTRUCTION=0` en los dos Workers (y en el workflow de GitHub Pages) y relanzar el build.
+Es una barrera de navegación, **no seguridad**: quien conozca la ruta entra. La protección real del admin es Cloudflare Access y el login. En local no se activa; para probarla, `NEXT_PUBLIC_UNDER_CONSTRUCTION=1`. **Para abrir el sitio al público:** variable de compilación `NEXT_PUBLIC_UNDER_CONSTRUCTION=0` en el Worker del admin y relanzar el build.
