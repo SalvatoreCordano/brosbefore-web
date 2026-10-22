@@ -55,11 +55,14 @@ El admin va detrás de Cloudflare Access (también su URL `*.workers.dev`). Las 
 
 ## Cómo trabajamos
 
-- **Nunca se sube directo a `main`.** Cada tanda de trabajo va en una rama y entra por **un PR**; quien lo aprueba lo fusiona con *Squash and merge*. Así se construye una sola vez en Cloudflare, al fusionar.
-- **El CI revisa cada PR** (`.github/workflows/ci.yml`): `pnpm typecheck`, `pnpm test` y `pnpm build`. Un error se ve en el PR, no en un build fallido de producción.
-- **`main` protegida** (GitHub, Settings → Rules → Rulesets): exigir PR, bloquear force-push y borrado, y exigir el check `check` del CI.
-- **Ramas:** `feat/…`, `fix/…`, `chore/…`. `main` es producción.
-- **Migraciones de Supabase** (`supabase/migrations/`): una por cambio, con fecha en el nombre. Se ejecutan a mano en el SQL Editor al fusionar; el PR lo avisa.
+Flujo: **rama de trabajo → PR a `development` → PR de `development` a `main`**. Cloudflare construye y publica solo al fusionar a `main`.
+
+- **Nunca se sube directo a `main` ni a `development`.** Cada tanda se prueba en local y entra por un PR a `development`. Cuando lo acumulado está aprobado, un segundo PR lleva `development` a `main`. Quien aprueba fusiona cada PR con *Squash and merge*.
+- **Sin previews en Cloudflare:** no hay URL de prueba por rama. Se prueba en local y con el CI.
+- **El CI revisa cada PR** (a `development` y a `main`; `.github/workflows/ci.yml`): `pnpm typecheck`, `pnpm test` y `pnpm build`. Un error se ve en el PR, no en un build fallido de producción.
+- **`main` y `development` protegidas** (GitHub, Settings → Rules → Rulesets): exigir PR, bloquear force-push y borrado, y exigir el check `check` del CI.
+- **Ramas de trabajo:** `feat/…`, `fix/…`, `chore/…`, creadas desde `development`. `main` es producción.
+- **Migraciones de Supabase** (`supabase/migrations/`): una por cambio, con fecha en el nombre. Se ejecutan a mano en el SQL Editor al fusionar a `main`; el PR lo avisa.
 
 ### Ajustes de Cloudflare que no viven en el repo
 
@@ -67,7 +70,7 @@ En cada Worker (`brosbefore-web` y `brosbefore-admin`), en **Settings → Build*
 
 | Ajuste | Valor | Para qué |
 |---|---|---|
-| Branch control → **Enable Preview Builds** | Desactivado | Una rama o un PR no dispara build: solo se construye al fusionar a `main` |
+| Branch control → **Builds para ramas de vista previa** (*Enable Preview Builds*) | Desactivado | Ninguna rama ni PR dispara build: solo se construye al fusionar a `main` |
 | **Build watch paths** (rutas a vigilar) | Web: `apps/web`, `packages/core`, `assets`, `pnpm-lock.yaml`. Admin: `apps/admin`, `packages/core`, `assets`, `pnpm-lock.yaml` | Un cambio en el admin o en los docs no reconstruye la web |
 | **Build caching** | Activado | Reutiliza dependencias entre builds |
 | Variable `NODE_VERSION` | Ya no hace falta (la fija `.node-version`) | Una sola fuente de verdad |
