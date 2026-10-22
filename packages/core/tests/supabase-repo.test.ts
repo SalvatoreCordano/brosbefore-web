@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { SupabaseRepo } from "../src/supabase-repo";
+import { SupabaseRepo, publicKeys } from "../src/supabase-repo";
 import { buildSeed } from "../src/seed";
 import type { Db } from "../src/types";
 
@@ -221,4 +221,33 @@ test("con R2 conectado, elegir o soltar una foto pública copia o quita su versi
   } finally {
     globalThis.fetch = realFetch;
   }
+});
+
+test("video de YouTube: se normaliza, se guarda sin archivo en R2 y se puede quitar", async () => {
+  const client = fakeClient();
+  const repo = repoOn(client);
+  await repo.seed(buildSeed());
+  const id = await repo.createCouple("Ana & Luis");
+  await repo.setCoverages(id, ["boda"]);
+  const cv = (await repo.getDb()).coverages.find((c) => c.coupleId === id)!;
+
+  for (const bad of ["https://vimeo.com/123456789", "https://evil.com/watch?v=yL7-UPrKCwg", "no es un enlace", "https://youtu.be/corto"]) {
+    await assert.rejects(repo.addYoutubeVideo(cv.id, bad), /YouTube/, bad);
+  }
+  await repo.addYoutubeVideo(cv.id, "https://www.youtube.com/watch?v=yL7-UPrKCwg&t=5s");
+  await assertPersisted(client, repo, "addYoutubeVideo");
+  await assert.rejects(repo.addYoutubeVideo(cv.id, "https://youtu.be/yL7-UPrKCwg"), /ya está/);
+  await repo.addYoutubeVideo(cv.id, "https://www.youtube.com/embed/muZDcVTYJAI");
+
+  const db = await repoOn(client).getDb();
+  const f = db.files.find((x) => x.externalUrl === "https://www.youtube.com/embed/yL7-UPrKCwg")!;
+  assert.equal(f.kind, "video");
+  assert.equal(f.storageKey, "");
+  assert.equal(f.poster, "https://img.youtube.com/vi/yL7-UPrKCwg/maxresdefault.jpg");
+  assert.ok(db.publicItems.some((i) => i.fileId === f.id && i.scope === "portfolio"));
+  assert.equal(publicKeys(db).size, publicKeys(buildSeed()).size); // no cuenta como foto para la copia pública
+
+  await repo.deleteFile(f.id);
+  await assertPersisted(client, repo, "quitar video");
+  assert.ok(!(await repo.getDb()).publicItems.some((i) => i.fileId === f.id));
 });

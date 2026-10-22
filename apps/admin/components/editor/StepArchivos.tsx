@@ -33,6 +33,7 @@ export function StepArchivos({ db, couple, flash }: StepProps) {
   const [rejected, setRejected] = useState<{ name: string; reason: string }[]>([]);
   const folderInput = useRef<HTMLInputElement>(null);
   const filesInput = useRef<HTMLInputElement>(null);
+  const [yt, setYt] = useState("");
 
   const all = filesOfCouple(db, couple.id);
   const unpublished = all.filter((f) => !f.published).length;
@@ -83,6 +84,16 @@ export function StepArchivos({ db, couple, flash }: StepProps) {
       flash(`${good.length} archivos subidos a ${COVERAGE_LABEL[active.type]}`);
     }
     setProgress(null);
+  };
+
+  const addYoutube = async () => {
+    try {
+      await repo.addYoutubeVideo(active.id, yt);
+      setYt("");
+      flash(`Video de YouTube agregado a ${COVERAGE_LABEL[active.type]}`);
+    } catch (e) {
+      flash(e instanceof Error ? e.message : "No se pudo agregar el video");
+    }
   };
 
   const momentOptions = moments.map((m) => m.moment);
@@ -182,6 +193,27 @@ export function StepArchivos({ db, couple, flash }: StepProps) {
               e.target.value = "";
             }}
           />
+        </div>
+
+        <div className="field">
+          <label htmlFor="yt-link">Enlace de YouTube</label>
+          <div className="drop__actions">
+            <input
+              id="yt-link"
+              type="url"
+              value={yt}
+              placeholder="https://www.youtube.com/watch?v=…"
+              onChange={(e) => setYt(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && yt.trim() && addYoutube()}
+            />
+            <button type="button" className="btn btn--ghost btn--sm" disabled={!yt.trim()} onClick={addYoutube}>
+              Agregar video
+            </button>
+          </div>
+          <span className="hint">
+            Es el video que se ve en la galería y el portafolio. Un video “no listado” de YouTube no es privado: lo ve cualquiera que tenga el
+            enlace. Si la pareja pide privacidad total, sube el film como archivo (queda en R2, solo lo ven ustedes y la pareja).
+          </span>
         </div>
 
         {rejected.length > 0 && (

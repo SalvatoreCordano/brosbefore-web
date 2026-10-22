@@ -17,6 +17,7 @@ import type {
   PublicProfile,
   PublicScope,
 } from "./types";
+import { youtubeId } from "./media";
 import { mediaUrls, storage } from "./storage";
 
 export interface NewFile {
@@ -59,6 +60,8 @@ export interface Repo {
 
   // ---- archivos ----
   addFiles(coverageId: Id, files: NewFile[], onProgress?: (done: number) => void): Promise<number>;
+  /** video alojado en YouTube (no listado): no pasa por R2, se guarda solo el enlace */
+  addYoutubeVideo(coverageId: Id, url: string): Promise<void>;
   renameMoment(id: Id, name: string): Promise<void>;
   moveMoment(id: Id, dir: -1 | 1): Promise<void>;
   deleteMoment(id: Id): Promise<void>;
@@ -409,6 +412,39 @@ export abstract class DbRepo implements Repo {
         added.forEach((fileId, order) => db.publicItems.push({ id: uid("pi"), coverageId, fileId, scope: "gallery", order }));
       }
       return stored.length;
+    });
+  }
+
+  async addYoutubeVideo(coverageId: Id, url: string) {
+    const id = youtubeId(url);
+    if (!id) throw new Error("El enlace tiene que ser de YouTube (youtube.com/watch?v=…, youtu.be/… o youtube.com/embed/…)");
+    await this.tx((db) => {
+      if (!db.coverages.some((c) => c.id === coverageId)) throw new Error("Cobertura no encontrada");
+      const embed = `https://www.youtube.com/embed/${id}`;
+      const inCoverage = momentIdsOfCoverage(db, coverageId);
+      if (db.files.some((f) => inCoverage.has(f.momentId) && f.externalUrl === embed)) throw new Error("Ese video ya está en esta cobertura");
+      let moment = db.moments.find((m) => m.coverageId === coverageId && m.name === "Video");
+      if (!moment) {
+        moment = { id: uid("m"), coverageId, name: "Video", order: Math.max(-1, ...db.moments.filter((m) => m.coverageId === coverageId).map((m) => m.order)) + 1 };
+        db.moments.push(moment);
+      }
+      const fileId = uid("f");
+      db.files.push({
+        id: fileId,
+        momentId: moment.id,
+        kind: "video",
+        name: "Video de YouTube",
+        storageKey: "", // la columna es not null; no hay archivo en R2
+        externalUrl: embed,
+        poster: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
+        order: Math.max(-1, ...db.files.filter((f) => f.momentId === moment!.id).map((f) => f.order)) + 1,
+        published: false,
+      });
+      // es público por definición: entra a la galería y al portafolio
+      for (const scope of ["gallery", "portfolio"] as const) {
+        const order = Math.max(-1, ...db.publicItems.filter((i) => i.coverageId === coverageId && i.scope === scope).map((i) => i.order)) + 1;
+        db.publicItems.push({ id: uid("pi"), coverageId, fileId, scope, order });
+      }
     });
   }
 
