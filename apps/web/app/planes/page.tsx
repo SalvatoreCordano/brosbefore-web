@@ -96,9 +96,14 @@ export default function Planes() {
                   </div>
                 ))}
               </dl>
-              <button type="button" className={`btn ${p.featured ? "btn--solid" : "btn--ghost"}`}>
+              <a
+                className={`btn ${p.featured ? "btn--solid" : "btn--ghost"}`}
+                href={`https://wa.me/@carozzi8?text=${encodeURIComponent(`¡Hola! Quisiera consultar fecha para el plan ${p.name}.`)}`}
+                target="_blank"
+                rel="noopener"
+              >
                 Consultar fecha
-              </button>
+              </a>
             </article>
           ))}
         </section>
