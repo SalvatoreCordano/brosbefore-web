@@ -13,7 +13,7 @@ import type {
 } from "./types";
 
 /** Convierte una storageKey en URL. Cada app pasa la suya (basePath/IndexedDB en el mock, R2 en real). */
-export type ResolveUrl = (key: string) => string;
+export type ResolveUrl = ((key: string) => string) & { original?: (key: string) => string };
 
 export const COVERAGE_LABEL: Record<CoverageType, string> = {
   boda: "Boda",
@@ -28,7 +28,8 @@ const byCoverageOrder = (a: Coverage, b: Coverage) => COVERAGE_ORDER.indexOf(a.t
 export interface MediaView {
   id: Id;
   kind: "photo" | "video";
-  src: string; // URL del archivo ("" si el video está en YouTube)
+  src: string; // URL del archivo ("" si el video está en YouTube). Fotos: versión ligera; en descargas, el original
+  thumb?: string; // versión ligera, cuando src es el original
   external?: string; // URL de embed de YouTube (solo mock)
   poster?: string;
   w?: number;
@@ -37,11 +38,15 @@ export interface MediaView {
   size?: number;
 }
 
-export function mediaView(f: MediaFile, resolve: ResolveUrl): MediaView {
+/** `full`: para descargar (el original); si no, las fotos van en versión ligera. Los videos siempre son el original. */
+export function mediaView(f: MediaFile, resolve: ResolveUrl, full = false): MediaView {
+  const original = resolve.original ?? resolve;
+  const wantOriginal = full || f.kind === "video";
   return {
     id: f.id,
     kind: f.kind,
-    src: f.storageKey ? resolve(f.storageKey) : "",
+    src: f.storageKey ? (wantOriginal ? original : resolve)(f.storageKey) : "",
+    thumb: full && f.kind === "photo" && f.storageKey ? resolve(f.storageKey) : undefined,
     external: f.externalUrl,
     poster: f.poster ? resolve(f.poster) : undefined,
     w: f.width,
@@ -322,7 +327,7 @@ export function toDownloads(db: Db, coupleId: Id, resolve: ResolveUrl): Download
     .map((cv) => {
       const moments = coverageMoments(db, cv.id)
         .map(({ moment, files }) => {
-          const views = files.filter((f) => f.published).map((f) => mediaView(f, resolve));
+          const views = files.filter((f) => f.published).map((f) => mediaView(f, resolve, true));
           return { id: moment.id, name: moment.name, files: views, size: sum(views) };
         })
         .filter((m) => m.files.length);

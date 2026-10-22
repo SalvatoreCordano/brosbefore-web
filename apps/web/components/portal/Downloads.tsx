@@ -114,7 +114,7 @@ export function Downloads({ view, names }: { view: DownloadsView; names: string 
                   <li key={f.id} className="dl-file">
                     <div className="dl-file__thumb">
                       {f.kind === "photo" ? (
-                        <img src={f.src || undefined} alt="" loading="lazy" />
+                        <img src={f.thumb || f.src || undefined} alt="" loading="lazy" />
                       ) : f.poster ? (
                         <img src={f.poster} alt="" loading="lazy" />
                       ) : (

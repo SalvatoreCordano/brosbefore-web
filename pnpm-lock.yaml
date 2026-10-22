@@ -43,6 +43,18 @@ importers:
         specifier: ^5.9.0
         version: 5.9.3
 
+  apps/api:
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^5.20261022.1
+        version: 5.20261022.1
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
+      typescript:
+        specifier: ^5.9.0
+        version: 5.9.3
+
   apps/web:
     dependencies:
       '@bb/core':
@@ -91,6 +103,9 @@ importers:
         version: 5.9.3
 
 packages:
+
+  '@cloudflare/workers-types@5.20261022.1':
+    resolution: {integrity: sha512-irp6lxKgWTnIquva6iSaJhV9vCdGlhLIw3+vVOj1Glge38LnKb3jMQiB53gaUB+EgN47JVVg58kJ703V/00JYw==}
 
   '@electric-sql/pglite@0.5.10':
     resolution: {integrity: sha512-tXc/25U3ulOkiRQuTFdwIv+JhBqtMdAF7Gvo6CfZZWtSB4+hgC4Wr2vwK5ngvvN5PJfAAEGIsfyCVy1JhCOBYw==}
@@ -659,6 +674,8 @@ packages:
     resolution: {integrity: sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg==}
 
 snapshots:
+
+  '@cloudflare/workers-types@5.20261022.1': {}
 
   '@electric-sql/pglite@0.5.10': {}
 

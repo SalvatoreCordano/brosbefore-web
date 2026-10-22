@@ -53,6 +53,11 @@ Dos Workers con assets estáticos, creados desde Git (Workers & Pages → Import
 
 El admin va detrás de Cloudflare Access (también su URL `*.workers.dev`). Las cabeceras y la redirección de `/pricing` están en `apps/*/public/_headers` y `_redirects`.
 
+## Archivos (R2)
+
+Las fotos y videos van a R2 a través de un Worker propio (`apps/api`). Pasos de puesta en marcha, buckets y límites en
+[apps/api/README.md](apps/api/README.md).
+
 ## Cómo trabajamos
 
 Flujo: **rama de trabajo → PR a `development` → PR de `development` a `main`**. Cloudflare construye y publica solo al fusionar a `main`.

@@ -8,7 +8,7 @@
     "dev:admin": "turbo run dev --filter=@bb/admin",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
-    "test": "pnpm --filter @bb/core test"
+    "test": "pnpm --filter @bb/core test && pnpm --filter @bb/api test"
   },
   "devDependencies": {
     "turbo": "^2.11.7",

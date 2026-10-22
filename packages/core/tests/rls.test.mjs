@@ -217,3 +217,33 @@ test("una invitación vencida (más de 14 días) no sirve", async () => {
     assert.equal((await db.query(`select * from get_invite('tok-viejo')`)).rows.length, 0);
   });
 });
+
+test("readable_keys y storage_used_bytes: el admin lee todo, la pareja solo lo suyo publicado, el público nada", async () => {
+  const [A, B, C] = ["a", "b", "c"].map((c) => `o/${c.repeat(8)}-${c.repeat(4)}-${c.repeat(4)}-${c.repeat(4)}-${c.repeat(12)}`);
+  await db.exec(`
+    insert into files (id, moment_id, kind, name, storage_key, size_bytes, published) values
+      ('f_o_pub',  'mA', 'photo', 'a.jpg', '${A}', 100, true),
+      ('f_o_priv', 'mA', 'photo', 'b.jpg', '${B}', 200, false),
+      ('f_o_b',    'mB', 'photo', 'c.jpg', '${C}', 400, true);
+  `);
+  const asked = `array['${A}', 'p/${A.slice(2)}', '${B}', '${C}']`;
+  const keys = async () => (await db.query(`select readable_keys(${asked}) as r`)).rows[0].r;
+  const used = async () => Number((await db.query("select storage_used_bytes() as n")).rows[0].n);
+
+  await as("authenticated", ADMIN, async () => {
+    assert.equal((await keys()).length, 4);
+    assert.equal(await used(), 700);
+  });
+  await as("authenticated", USER_A, async () => {
+    assert.deepEqual(await keys(), [A, `p/${A.slice(2)}`]); // lo publicado de su pareja, original y ligera; nada de otra pareja ni sin publicar
+    assert.equal(await used(), 0);
+  });
+  // un archivo sin publicar que está en su presentación publicada, sí
+  await db.exec(`update presentation_published set content = '{"items":[{"fileId":"f_o_priv"}]}' where couple_id = 'cA'`);
+  await as("authenticated", USER_A, async () => assert.ok((await keys()).includes(B)));
+  await as("authenticated", USER_B, async () => assert.deepEqual(await keys(), [C]));
+  await as("anon", null, async () => {
+    assert.deepEqual(await keys(), []);
+    assert.equal(await used(), 0);
+  });
+});
