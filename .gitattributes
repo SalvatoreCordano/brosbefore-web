@@ -1,0 +1,7 @@
+# Un solo final de línea en el repo (LF), sin importar el sistema de cada quien.
+# Evita los avisos "LF will be replaced by CRLF" y las diferencias falsas entre Windows y Linux.
+* text=auto eol=lf
+*.otf binary
+*.webp binary
+*.jpg binary
+*.png binary

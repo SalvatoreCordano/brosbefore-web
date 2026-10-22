@@ -2,5 +2,5 @@
   // Sitio estático (export de Next.js): solo assets, sin código de servidor.
   "name": "brosbefore-web",
   "compatibility_date": "2026-10-01",
-  "assets": { "directory": "./out" }
+  "assets": { "directory": "./out", "not_found_handling": "404-page" }
 }
