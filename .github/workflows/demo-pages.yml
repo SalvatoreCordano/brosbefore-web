@@ -1,3 +1,7 @@
+# Copia de respaldo en GitHub Pages. El sitio real vive en Cloudflare (brosbeforefilm.com), así que
+# ya no se publica solo con cada push a main: se lanza a mano desde la pestaña Actions si hace falta.
+# Para volver al modo automático, devolver `push: branches: [main]` al bloque `on`.
+#
 # Publica el sitio en GitHub Pages desde la rama main:
 #   raíz   → web pública + portal de clientes (apps/web)
 #   /admin → admin interno (apps/admin)
@@ -7,8 +11,6 @@
 name: Publicar en GitHub Pages
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:

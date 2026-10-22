@@ -7,5 +7,6 @@
 /_next/static/*
   Cache-Control: public, max-age=31536000, immutable
 
+# sin hash en el nombre: un día, para que un logo o foto nuevos no tarden un año en verse
 /assets/*
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=86400
