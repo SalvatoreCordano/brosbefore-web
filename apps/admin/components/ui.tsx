@@ -108,7 +108,7 @@ export function TextField({
 }
 
 export function Thumb({ file, className = "thumb" }: { file: MediaFile; className?: string }) {
-  const src = file.storageKey ? resolve(file.storageKey) : "";
+  const src = file.storageKey ? (file.kind === "video" ? resolve.original : resolve)(file.storageKey) : "";
   const poster = file.poster ? resolve(file.poster) : "";
   return (
     <span className={className}>

@@ -5,7 +5,8 @@ Base de datos y accesos de brosbefore. Proyecto: `nscibtisjzfflnjhwhwi`.
 ## Preparar el proyecto (una sola vez)
 
 1. **Esquema y planes:** en *SQL Editor*, pegar y ejecutar en orden los archivos de `migrations/`
-   (`..._init.sql` y después `..._seed_plans.sql`). Ejecutarlos dos veces falla a propósito.
+   (`..._init.sql`, `..._seed_plans.sql` y `..._storage.sql`). Ejecutarlos dos veces falla a propósito.
+   Si ya ejecutaste los dos primeros, ejecuta solo los que falten.
 2. **Correo sin confirmación:** *Authentication → Sign In / Providers → Email* → desactivar **Confirm email**.
    La pareja demuestra que el correo es suyo con el enlace de invitación, así que no hace falta otro paso.
    Dejar el registro abierto es seguro: una cuenta sin invitación no puede leer ni escribir nada (RLS).

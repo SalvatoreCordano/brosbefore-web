@@ -10,7 +10,7 @@
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
-    "test": "node --test tests/rls.test.mjs && tsx --test tests/supabase-repo.test.ts"
+    "test": "node --test tests/rls.test.mjs && tsx --test tests/supabase-repo.test.ts tests/r2.test.ts"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.10",

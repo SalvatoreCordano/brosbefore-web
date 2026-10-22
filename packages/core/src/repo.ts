@@ -474,7 +474,7 @@ export abstract class DbRepo implements Repo {
   }
 
   async uploadAsset(blob: Blob) {
-    const key = await storage.put(blob);
+    const key = await storage.put(blob, { asset: true });
     mediaUrls.prime(key, blob);
     return key;
   }

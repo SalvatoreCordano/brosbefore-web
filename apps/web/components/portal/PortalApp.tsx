@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { repo, toDownloads, toPresentation, type Session } from "@bb/core";
 import { asset, BASE_PATH } from "@/lib/asset";
-import { resolve } from "@/lib/resolve";
+import { resolvePortal as resolve } from "@/lib/resolve";
 import { useDb } from "@/lib/use-db";
 import { ThemeToggle } from "../ThemeToggle";
 import { Downloads } from "./Downloads";
