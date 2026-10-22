@@ -9,5 +9,6 @@ declare const process: { env: Record<string, string | undefined> };
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const apiUrl = process.env.NEXT_PUBLIC_API_URL; // Worker de archivos (R2)
 
-export const repo: Repo = url && anonKey ? new SupabaseRepo(url, anonKey) : new MockRepo();
+export const repo: Repo = url && anonKey ? new SupabaseRepo(url, anonKey, undefined, apiUrl) : new MockRepo();

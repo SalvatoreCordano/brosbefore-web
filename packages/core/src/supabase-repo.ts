@@ -6,7 +6,8 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Couple, Db, Member, PresentationContent, Testimonial } from "./types";
 import { DbRepo, now, uid, type NewFile, type Session } from "./repo";
-import { MockStorage, storage } from "./storage";
+import { MockStorage, mediaUrls, setStorage, storage } from "./storage";
+import { R2Storage } from "./r2-storage";
 
 type Row = Record<string, any>;
 
@@ -78,22 +79,42 @@ const fail = (e: { message: string } | null) => {
   if (e) throw new Error(e.message);
 };
 
+/** Fotos cuya copia ligera debe estar en el bucket público: las de la galería/portafolio, portadas y banners de parejas visibles. */
+export function publicKeys(db: Db): Set<string> {
+  const open = new Set(db.couples.filter((c) => c.inGallery && !c.deletedAt).map((c) => c.id));
+  const coupleOf = new Map(db.coverages.map((c) => [c.id, c.coupleId]));
+  const ids = new Set<string>();
+  db.publicItems.forEach((i) => open.has(coupleOf.get(i.coverageId) ?? "") && ids.add(i.fileId));
+  db.publicProfiles
+    .filter((p) => open.has(p.coupleId))
+    .forEach((p) => [p.coverFileId, p.banner?.fileId].forEach((id) => id && ids.add(id)));
+  return new Set(db.files.filter((f) => ids.has(f.id) && f.kind === "photo" && f.storageKey.startsWith("o/")).map((f) => f.storageKey));
+}
+
 export class SupabaseRepo extends DbRepo {
   readonly mode = "supabase" as const;
   private sb: SupabaseClient;
   private cache: Promise<Db> | null = null;
   private sessionCache: Promise<Session | null> | null = null;
   private userId: string | null | undefined;
+  private r2: R2Storage | null = null;
 
-  /** `client` solo se pasa en las pruebas */
-  constructor(url: string, anonKey: string, client?: SupabaseClient) {
+  /** `client` solo se pasa en las pruebas; `apiUrl` es el Worker de archivos (R2) */
+  constructor(url: string, anonKey: string, client?: SupabaseClient, apiUrl?: string) {
     super();
     this.sb = client ?? createClient(url, anonKey, { auth: { detectSessionInUrl: false } });
+    if (apiUrl) {
+      const r2 = (this.r2 = new R2Storage({ api: apiUrl, token: async () => (await this.sb.auth.getSession()).data.session?.access_token ?? null }));
+      setStorage(r2);
+      mediaUrls.useSigner((keys) => r2.sign(keys));
+    }
+    if (typeof window !== "undefined") mediaUrls.subscribe(() => this.emit()); // llegó un enlace firmado: repintar
     this.sb.auth.onAuthStateChange((_event, session) => {
       const id = session?.user.id ?? null;
       if (id === this.userId) return; // renovar el token no cambia nada
       const first = this.userId === undefined;
       this.userId = id;
+      mediaUrls.forgetSigned(); // los enlaces firmados eran de la sesión anterior
       // lo que se ve depende de quién entró: se vuelve a leer todo
       this.cache = null;
       this.sessionCache = null;
@@ -212,10 +233,21 @@ export class SupabaseRepo extends DbRepo {
           }
         }
       }
+      await this.syncPublicCopies(prev, next);
     } catch (e) {
       this.cache = null; // pudo quedar guardado a medias: se vuelve a leer la base real
       throw e;
     }
+  }
+
+  /** La web pública lee copias ligeras desde un bucket aparte: se crean al elegir una foto y se quitan al soltarla. */
+  private async syncPublicCopies(prev: Db, next: Db) {
+    if (!this.r2) return;
+    const before = publicKeys(prev);
+    const after = publicKeys(next);
+    const add = [...after].filter((k) => !before.has(k));
+    const gone = [...before].filter((k) => !after.has(k));
+    if (add.length || gone.length) await this.r2.syncPublic(add, gone);
   }
 
   async addFiles(coverageId: string, files: NewFile[], onProgress?: (done: number) => void) {
@@ -227,8 +259,8 @@ export class SupabaseRepo extends DbRepo {
     return super.uploadAsset(blob);
   }
   private requireRealStorage() {
-    // los archivos van a R2 (etapa siguiente); con el almacenamiento del navegador quedarían rotos
-    if (storage instanceof MockStorage) throw new Error("La subida de archivos se activa cuando esté conectado R2.");
+    // sin el Worker de archivos (NEXT_PUBLIC_API_URL) los archivos quedarían guardados solo en este navegador
+    if (storage instanceof MockStorage) throw new Error("La subida de archivos no está conectada (falta NEXT_PUBLIC_API_URL).");
   }
 
   async resetDemo() {

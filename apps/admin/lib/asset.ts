@@ -10,7 +10,7 @@ export function asset(key: string): string {
 }
 
 /** storageKey → URL (archivos de la demo en el navegador, /assets o URLs externas). */
-export const resolve = makeResolver(asset);
+export const resolve = makeResolver(asset, "private"); // el admin siempre tiene sesión: lee de R2 con enlaces firmados
 
 /** URL de una página de la web pública o del portal (se abre en otra pestaña). */
 export const webUrl = (path: string) => `${WEB_BASE}${path}`;

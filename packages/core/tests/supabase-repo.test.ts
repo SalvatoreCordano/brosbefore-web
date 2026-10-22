@@ -186,3 +186,39 @@ test("las operaciones seguidas se guardan en orden", async () => {
   await assertPersisted(client, repo, "tres altas a la vez");
   assert.equal((await repo.getDb()).couples.length, buildSeed().couples.length + 3);
 });
+
+test("con R2 conectado, elegir o soltar una foto pública copia o quita su versión ligera", async () => {
+  const UUID = "11111111-1111-1111-1111-111111111111";
+  const calls: string[] = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = (async (url: any, init: any) => {
+    calls.push(`${init.method} ${String(url).replace("https://api.test", "")}`);
+    return Response.json({ ok: true });
+  }) as any;
+  try {
+    const client = fakeClient();
+    (client as any).auth.getSession = () => Promise.resolve({ data: { session: { access_token: "t" } }, error: null });
+    const repo = new TestRepo("http://x", "k", client, "https://api.test");
+
+    const db = buildSeed();
+    const file = db.files.find((f) => f.kind === "photo")!;
+    file.storageKey = `o/${UUID}`;
+    const item = db.publicItems.find((i) => i.fileId === file.id)!;
+    const cv = db.coverages.find((c) => c.id === item.coverageId)!;
+    db.couples.find((c) => c.id === cv.coupleId)!.inGallery = false;
+    db.couples.find((c) => c.id === cv.coupleId)!.inPortfolio = false;
+    await repo.seed(db);
+    assert.deepEqual(calls, [], "oculta: nada se copia al bucket público");
+
+    await repo.setCoupleVisibility(cv.coupleId, { inGallery: true });
+    assert.deepEqual(calls, [`POST /pub/${UUID}`], "al entrar a la galería se copia la versión ligera");
+
+    calls.length = 0;
+    await repo.setPublicItems(cv.id, item.scope, []);
+    const cover = db.publicProfiles.find((p) => p.coupleId === cv.coupleId)?.coverFileId;
+    // si la foto sigue siendo portada o banner, se queda; si no, se quita
+    assert.deepEqual(calls, cover === file.id ? [] : [`DELETE /pub/${UUID}`]);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
