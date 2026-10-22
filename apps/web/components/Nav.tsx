@@ -59,15 +59,13 @@ export function Nav() {
           <img src={asset("assets/logo.svg")} alt={SITE.name} />
         </Link>
 
-        {!isHome && (
-          <nav className="nav__links" aria-label="Secciones">
-            {INLINE.map((l) => (
-              <Link key={l.href} href={l.href} className={`nav__link${isCurrent(pathname, l.href) ? " is-current" : ""}`}>
-                {l.label}
-              </Link>
-            ))}
-          </nav>
-        )}
+        <nav className="nav__links" aria-label="Secciones">
+          {INLINE.map((l) => (
+            <Link key={l.href} href={l.href} className={`nav__link${isCurrent(pathname, l.href) ? " is-current" : ""}`}>
+              {l.label}
+            </Link>
+          ))}
+        </nav>
 
         <div className="nav__actions">
           {!isHome && <ThemeToggle />}

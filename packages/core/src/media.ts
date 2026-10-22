@@ -176,3 +176,23 @@ export async function downloadZip(
   downloadUrl(url, zipName);
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
+
+/** Acepta watch?v=, youtu.be/, embed/ o shorts/ de YouTube; devuelve el id o null si no es YouTube. */
+export function youtubeId(input: string): string | null {
+  let u: URL;
+  try {
+    u = new URL(input.trim());
+  } catch {
+    return null;
+  }
+  const host = u.hostname.replace(/^(www|m)\./, "");
+  const id =
+    host === "youtu.be"
+      ? u.pathname.split("/")[1]
+      : host === "youtube.com" || host === "youtube-nocookie.com"
+        ? u.pathname === "/watch"
+          ? u.searchParams.get("v")
+          : u.pathname.match(/^\/(?:embed|shorts)\/([^/]+)/)?.[1]
+        : null;
+  return id && /^[\w-]{11}$/.test(id) ? id : null;
+}
