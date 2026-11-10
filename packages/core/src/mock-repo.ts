@@ -1,9 +1,9 @@
-// MockRepo: datos de ejemplo en localStorage, archivos en IndexedDB y cuentas de demo.
-// Solo para desarrollo local y demos; en producción manda SupabaseRepo.
+// MockRepo: datos de ejemplo en localStorage y archivos en IndexedDB.
+// Solo para desarrollo local sin conexión y para pruebas; en producción manda SupabaseRepo.
 import type { Db } from "./types";
 import { DbRepo, hashPassword, isEmail, now, uid } from "./repo";
 import { buildSeed, DB_VERSION } from "./seed";
-import { mediaUrls, storage } from "./storage";
+import { mediaUrls } from "./storage";
 
 const STORAGE_KEY = "bb-mock-db";
 const SESSION_KEY = "bb-portal-session";
@@ -57,15 +57,10 @@ export class MockRepo extends DbRepo {
     if (localStorage.getItem(SESSION_KEY) && !(await this.getSession())) await this.logout();
   }
 
-  async resetDemo() {
-    this.db = buildSeed();
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem(SESSION_KEY);
-    } catch {}
-    await storage.clear().catch(() => {});
-    this.emit();
+  previewToken() {
+    return null; // en la demo la web y el admin comparten los datos del navegador: no hace falta
   }
+  startPreview(_token: string) {}
 
   // ---------- portal ----------
   async getSession() {

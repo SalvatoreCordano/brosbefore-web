@@ -13,8 +13,8 @@ import {
   type MediaFile,
   type PresItemRole,
 } from "@bb/core";
-import { resolve, webUrl } from "@/lib/asset";
-import { MediaPicker, Section, SelectAll, TextField } from "../ui";
+import { resolve } from "@/lib/asset";
+import { MediaPicker, PreviewButton, Section, SelectAll, TextField } from "../ui";
 import type { StepProps } from "./StoryEditor";
 
 export function StepPresentacion({ db, couple, flash }: StepProps) {
@@ -60,9 +60,7 @@ export function StepPresentacion({ db, couple, flash }: StepProps) {
           {dirty && pres.publishedAt && <strong> · hay cambios sin publicar</strong>}
         </span>
         <div className="publish-bar__actions">
-          <a className="btn btn--ghost btn--sm" href={webUrl(`/portal?preview=${couple.id}`)} target="_blank" rel="noopener">
-            Vista previa
-          </a>
+          <PreviewButton coupleId={couple.id}>Vista previa</PreviewButton>
           <button
             type="button"
             className="btn btn--solid btn--sm"

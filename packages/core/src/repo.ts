@@ -11,12 +11,16 @@ import type {
   MediaFile,
   MediaKind,
   Member,
+  Plan,
+  PlanCategory,
+  PlanRow,
   PortalStatus,
   PresItemRole,
   PresentationContent,
   PublicProfile,
   PublicScope,
 } from "./types";
+import { PLAN_CATEGORIES } from "./types";
 import { youtubeId } from "./media";
 import { mediaUrls, storage } from "./storage";
 
@@ -46,7 +50,6 @@ export interface Repo {
   readonly mode: "mock" | "supabase";
   getDb(): Promise<Db>;
   subscribe(listener: () => void): () => void;
-  resetDemo(): Promise<void>;
 
   // ---- parejas ----
   createCouple(names: string): Promise<Id>;
@@ -57,6 +60,11 @@ export interface Repo {
   reorderPortfolio(coupleIds: Id[]): Promise<void>;
   setPortalStatus(coupleId: Id, status: PortalStatus): Promise<void>;
   deleteCouple(coupleId: Id): Promise<void>;
+
+  // ---- planes ----
+  /** nace oculto: se muestra en la web cuando lo actives. Sin precio (0) la web dice "Consultar precio" */
+  createPlan(name: string, category?: PlanCategory): Promise<Id>;
+  updatePlan(id: Id, patch: Partial<Omit<Plan, "id">>): Promise<void>;
 
   // ---- archivos ----
   addFiles(coverageId: Id, files: NewFile[], onProgress?: (done: number) => void): Promise<number>;
@@ -105,9 +113,21 @@ export interface Repo {
   getAdmin(): Promise<{ email: string } | null>;
   adminLogin(email: string, password: string): Promise<void>;
   adminLogout(): Promise<void>;
+  /** token de la sesión del admin, para abrir la vista previa del portal en otro dominio (null en la demo o sin sesión) */
+  previewToken(): string | null;
+  /** el portal abierto con ese token lee como el admin, solo en memoria: no guarda sesión ni la renueva */
+  startPreview(token: string): void;
 }
 
+const UPLOAD_PARALLEL = 3; // archivos subiéndose a la vez: más rápido sin saturar la conexión ni el Worker
+
 export const now = () => new Date().toISOString();
+/** quita espacios y líneas vacías; una fila sin título ni líneas se descarta */
+const cleanRows = (rows: PlanRow[]): PlanRow[] =>
+  rows
+    .map((r) => ({ label: r.label.trim(), lines: r.lines.map((l) => l.trim()).filter(Boolean) }))
+    .filter((r) => r.label || r.lines.length);
+
 export const uid = (p: string) => `${p}_${crypto.randomUUID().slice(0, 8)}`;
 export const slugify = (s: string) =>
   s
@@ -147,7 +167,6 @@ export abstract class DbRepo implements Repo {
   protected abstract commit(prev: Db, next: Db): Promise<void>;
   protected async afterCoupleDeleted(): Promise<void> {}
 
-  abstract resetDemo(): Promise<void>;
   abstract getSession(): Promise<Session | null>;
   abstract getInvite(token: string): Promise<{ email: string; names: string } | null>;
   abstract registerWithInvite(token: string, name: string, password: string): Promise<void>;
@@ -157,6 +176,8 @@ export abstract class DbRepo implements Repo {
   abstract getAdmin(): Promise<{ email: string } | null>;
   abstract adminLogin(email: string, password: string): Promise<void>;
   abstract adminLogout(): Promise<void>;
+  abstract previewToken(): string | null;
+  abstract startPreview(token: string): void;
 
   protected emit() {
     this.listeners.forEach((l) => l());
@@ -363,22 +384,68 @@ export abstract class DbRepo implements Repo {
     await this.afterCoupleDeleted();
   }
 
+  // ---------- planes ----------
+  async createPlan(name: string, category: PlanCategory = "wedding") {
+    if (!name.trim()) throw new Error("El plan necesita un nombre");
+    if (!PLAN_CATEGORIES.some((c) => c.id === category)) throw new Error("Esa categoría de planes no existe");
+    return this.tx((db) => {
+      const id = uid("plan");
+      db.plans.push({ id, name: name.trim(), description: "", priceFrom: 0, includes: [], category, featured: false, active: false });
+      return id;
+    });
+  }
+
+  async updatePlan(id: Id, patch: Partial<Omit<Plan, "id">>) {
+    await this.tx((db) => {
+      const p = db.plans.find((x) => x.id === id);
+      if (!p) throw new Error("Plan no encontrado");
+      const next = { ...p, ...patch };
+      if (!next.name.trim()) throw new Error("El plan necesita un nombre");
+      if (!Number.isFinite(next.priceFrom) || next.priceFrom < 0) throw new Error("El precio debe ser un número desde 0");
+      if (!PLAN_CATEGORIES.some((c) => c.id === next.category)) throw new Error("Esa categoría de planes no existe");
+      Object.assign(p, next, {
+        name: next.name.trim(),
+        description: next.description.trim(),
+        includes: cleanRows(next.includes),
+      });
+      // solo uno destacado por pestaña (también al mover un plan destacado a otra categoría)
+      if (next.featured) db.plans.forEach((x) => x.id !== id && x.category === next.category && (x.featured = false));
+    });
+  }
+
   // ---------- archivos ----------
   async addFiles(coverageId: Id, files: NewFile[], onProgress?: (done: number) => void) {
-    // primero los blobs (lo lento), después los datos en una sola escritura
-    const stored: (NewFile & { key: string; size: number })[] = [];
-    for (const f of files) {
-      const key = await storage.put(f.blob);
-      mediaUrls.prime(key, f.blob);
-      stored.push({ ...f, key, size: f.blob.size });
-      onProgress?.(stored.length);
+    // primero los blobs (lo lento), después los datos en una sola escritura.
+    // Varios a la vez, pero quedan en el orden en que se eligieron.
+    const stored: ((NewFile & { key: string; size: number }) | undefined)[] = new Array(files.length);
+    let next = 0;
+    let done = 0;
+    let failure: unknown;
+    const worker = async () => {
+      while (next < files.length && failure === undefined) {
+        const i = next++;
+        try {
+          const key = await storage.put(files[i].blob);
+          mediaUrls.prime(key, files[i].blob);
+          stored[i] = { ...files[i], key, size: files[i].blob.size };
+          onProgress?.(++done);
+        } catch (e) {
+          failure ??= e ?? new Error("No se pudo subir el archivo");
+        }
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(UPLOAD_PARALLEL, files.length) }, worker));
+    if (failure !== undefined) {
+      // no queda nada a medias: lo que ya se subió se borra y el error llega a la pantalla
+      await storage.remove(stored.flatMap((s) => (s ? [s.key] : [])));
+      throw failure;
     }
     return this.tx((db) => {
       if (!db.coverages.some((c) => c.id === coverageId)) throw new Error("Cobertura no encontrada");
       // si la ficha pública todavía no tiene selección, arranca con todo (después se recorta)
       const firstUpload = !db.publicItems.some((i) => i.coverageId === coverageId && i.scope === "gallery");
       const added: Id[] = [];
-      for (const f of stored) {
+      for (const f of stored as NonNullable<(typeof stored)[number]>[]) {
         const name = f.momentName.trim() || "General";
         let moment = db.moments.find((m) => m.coverageId === coverageId && m.name.toLowerCase() === name.toLowerCase());
         if (!moment) {

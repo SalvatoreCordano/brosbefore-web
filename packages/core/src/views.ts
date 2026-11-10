@@ -7,10 +7,14 @@ import type {
   Id,
   MediaFile,
   MediaRef,
+  Plan,
+  PlanCategory,
+  PlanRow,
   PortfolioItem,
   PresItem,
   PublicScope,
 } from "./types";
+import { PLAN_CATEGORIES } from "./types";
 
 /** Convierte una storageKey en URL. Cada app pasa la suya (basePath/IndexedDB en el mock, R2 en real). */
 export type ResolveUrl = ((key: string) => string) & { original?: (key: string) => string };
@@ -72,6 +76,46 @@ export function coverageMoments(db: Db, coverageId: Id) {
     .filter((m) => m.coverageId === coverageId)
     .sort(byOrder)
     .map((m) => ({ moment: m, files: db.files.filter((f) => f.momentId === m.id).sort(byOrder) }));
+}
+
+export interface PlanCard {
+  id: Id;
+  num: string; // "01", "02"… según el orden por precio
+  name: string;
+  description: string;
+  priceFrom: number;
+  featured: boolean;
+  rows: PlanRow[];
+}
+
+/** Del más económico al más caro; los que no tienen precio (0, "Consultar precio") van al final. */
+export const byPlanPrice = (a: Plan, b: Plan) => (a.priceFrom || Infinity) - (b.priceFrom || Infinity) || a.name.localeCompare(b.name);
+
+export interface PlanGroup {
+  id: PlanCategory;
+  label: string;
+  plans: PlanCard[];
+}
+
+/** Planes visibles en la web, por pestaña (Wedding, Dates, Proposal): solo los activos y solo las pestañas con planes. */
+export function toPlanGroups(plans: Plan[]): PlanGroup[] {
+  return PLAN_CATEGORIES.map((c) => ({ id: c.id, label: c.label, plans: toPublicPlans(plans, c.id) })).filter((g) => g.plans.length);
+}
+
+/** Planes visibles de una categoría (por defecto Wedding): solo los activos. */
+export function toPublicPlans(plans: Plan[], category: PlanCategory = "wedding"): PlanCard[] {
+  return plans
+    .filter((p) => p.active !== false && (p.category ?? "wedding") === category)
+    .sort(byPlanPrice)
+    .map((p, i) => ({
+      id: p.id,
+      num: String(i + 1).padStart(2, "0"),
+      name: p.name,
+      description: p.description,
+      priceFrom: p.priceFrom,
+      featured: !!p.featured,
+      rows: p.includes,
+    }));
 }
 
 const planName = (db: Db, planId: Id | null) => db.plans.find((p) => p.id === planId)?.name ?? "";

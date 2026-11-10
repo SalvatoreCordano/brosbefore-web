@@ -29,7 +29,13 @@ export function PortalApp() {
   const [toast, setToast] = useState("");
 
   useEffect(() => {
-    setPreview(new URLSearchParams(location.search).get("preview"));
+    const wanted = new URLSearchParams(location.search).get("preview");
+    const token = new URLSearchParams(location.hash.slice(1)).get("t"); // sesión del admin, solo para la vista previa
+    if (wanted && token) {
+      repo.startPreview(token);
+      history.replaceState(history.state, "", `${location.pathname}${location.search}`); // no queda en la barra ni en el historial
+    }
+    setPreview(wanted);
     const fromHash = location.hash.slice(1) as Tab;
     if (TABS.some((t) => t.id === fromHash)) setTab(fromHash);
     const load = () => repo.getSession().then(setSession);
@@ -84,7 +90,7 @@ export function PortalApp() {
   if (!couple) {
     return (
       <div className="portal-loading">
-        <p className="eyebrow">{preview ? "Esa historia no existe." : "Redirigiendo…"}</p>
+        <p className="eyebrow">{preview ? "Esa historia no existe o la vista previa venció. Vuelve a abrirla desde el admin." : "Redirigiendo…"}</p>
       </div>
     );
   }

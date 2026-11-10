@@ -5,7 +5,7 @@ Base de datos y accesos de brosbefore. Proyecto: `nscibtisjzfflnjhwhwi`.
 ## Preparar el proyecto (una sola vez)
 
 1. **Esquema y planes:** en *SQL Editor*, pegar y ejecutar en orden los archivos de `migrations/`
-   (`..._init.sql`, `..._seed_plans.sql` y `..._storage.sql`). Ejecutarlos dos veces falla a propósito.
+   (`..._init.sql`, `..._seed_plans.sql`, `..._storage.sql`, `..._plans_admin.sql` y `..._plan_categories.sql`). Ejecutarlos dos veces falla a propósito.
    Si ya ejecutaste los dos primeros, ejecuta solo los que falten.
 2. **Correo sin confirmación:** *Authentication → Sign In / Providers → Email* → desactivar **Confirm email**.
    La pareja demuestra que el correo es suyo con el enlace de invitación, así que no hace falta otro paso.
@@ -18,14 +18,14 @@ Base de datos y accesos de brosbefore. Proyecto: `nscibtisjzfflnjhwhwi`.
    Repetir para cada persona del equipo.
 4. **Conectar las apps:** en Cloudflare, en las **variables de compilación** de los dos Workers, agregar
    `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` (la llave *anon*, que es pública) y relanzar el build.
-   Sin esas variables las apps usan el modo demo con datos de ejemplo.
+   Sin esas variables las apps usan el modo local con datos de ejemplo (solo para desarrollo).
 
 **Nunca** poner la llave `service_role` en variables `NEXT_PUBLIC_*` ni en el repo.
 
 ## Probar en local contra Supabase
 
 Crear `apps/web/.env.local` y `apps/admin/.env.local` (están ignorados por git) con las dos variables de arriba.
-Para volver al modo demo, borrar esos archivos.
+Para volver al modo local, borrar esos archivos.
 
 ## Reglas de acceso (RLS)
 
