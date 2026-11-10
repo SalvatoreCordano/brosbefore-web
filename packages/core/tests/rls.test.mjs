@@ -247,3 +247,23 @@ test("readable_keys y storage_used_bytes: el admin lee todo, la pareja solo lo s
     assert.equal(await used(), 0);
   });
 });
+
+test("planes: el público solo ve los activos, la pareja no los edita y el contenido inicial quedó en renglones", async () => {
+  await db.exec(`update plans set active = false where id = 'plan_story'`);
+  await as("anon", null, async () => {
+    const r = await ids("select id from plans");
+    assert.ok(r.includes("plan_essentials") && !r.includes("plan_story"), "el oculto no se ve");
+  });
+  await as("authenticated", USER_A, async () => assert.ok(!(await ids("select id from plans")).includes("plan_story")));
+  await as("authenticated", ADMIN, async () => assert.ok((await ids("select id from plans")).includes("plan_story"), "el admin sí lo ve"));
+  await as("authenticated", USER_A, async () => assert.equal((await db.query("update plans set name = 'x' returning id")).rows.length, 0));
+
+  const { rows } = await db.query(
+    "select id, featured, includes -> 0 ->> 'label' as label, jsonb_array_length(includes) as n from plans where id like 'plan_%' order by id"
+  );
+  assert.deepEqual(rows.map((r) => [r.id, r.featured, r.label, r.n]), [
+    ["plan_essentials", false, "Cobertura", 4],
+    ["plan_legacy", false, "Cobertura", 4],
+    ["plan_story", true, "Cobertura", 4],
+  ]);
+});

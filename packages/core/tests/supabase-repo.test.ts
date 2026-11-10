@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { SupabaseRepo, publicKeys } from "../src/supabase-repo";
 import { buildSeed } from "../src/seed";
+import { toPublicPlans } from "../src/views";
 import type { Db } from "../src/types";
 
 type Row = Record<string, any>;
@@ -250,4 +251,89 @@ test("video de YouTube: se normaliza, se guarda sin archivo en R2 y se puede qui
   await repo.deleteFile(f.id);
   await assertPersisted(client, repo, "quitar video");
   assert.ok(!(await repo.getDb()).publicItems.some((i) => i.fileId === f.id));
+});
+
+test("planes: se crea oculto, valida, solo uno queda destacado y lo guardado se lee igual", async () => {
+  const client = fakeClient();
+  const repo = repoOn(client);
+  await repo.seed(buildSeed());
+
+  const id = await repo.createPlan("  the new™ ");
+  let plan = (await repo.getDb()).plans.find((p) => p.id === id)!;
+  assert.deepEqual([plan.name, plan.active, plan.priceFrom], ["the new™", false, 0]);
+
+  await assert.rejects(repo.updatePlan(id, { active: true }), /precio/); // sin precio no se muestra
+  await assert.rejects(repo.updatePlan(id, { name: "  " }), /nombre/);
+  await assert.rejects(repo.updatePlan(id, { priceFrom: -1 }), /precio/);
+  await assert.rejects(repo.updatePlan(id, { priceFrom: Number.NaN }), /precio/);
+
+  await repo.updatePlan(id, {
+    priceFrom: 6000,
+    active: true,
+    description: " Para empezar ",
+    includes: [
+      { label: " Cobertura ", lines: [" 4 horas ", "", "  "] },
+      { label: "", lines: [] }, // fila vacía: se descarta
+    ],
+  });
+  plan = (await repo.getDb()).plans.find((p) => p.id === id)!;
+  assert.equal(plan.description, "Para empezar");
+  assert.deepEqual(plan.includes, [{ label: "Cobertura", lines: ["4 horas"] }]);
+  await assertPersisted(client, repo, "updatePlan");
+
+  await repo.updatePlan(id, { featured: true });
+  await repo.updatePlan("plan_legacy", { featured: true });
+  const featured = (await repo.getDb()).plans.filter((p) => p.featured).map((p) => p.id);
+  assert.deepEqual(featured, ["plan_legacy"], "destacar otro quita el anterior");
+  await assertPersisted(client, repo, "featured");
+
+  await repo.updatePlan("plan_story", { active: false });
+  const visible = toPublicPlans((await repo.getDb()).plans);
+  assert.deepEqual(visible.map((p) => [p.num, p.name]), [["01", "essentials™"], ["02", "the new™"], ["03", "the legacy™"]]);
+  await assertPersisted(client, repo, "ocultar");
+});
+
+test("subida de varios archivos: van de a tres, quedan en el orden elegido y un fallo no deja nada a medias", async () => {
+  const live = { now: 0, max: 0 };
+  const uploaded: string[] = [];
+  const removed: string[] = [];
+  let failOn = -1;
+  const fakeStorage = {
+    async put(blob: Blob) {
+      const n = Number(await blob.text()); // el contenido es el número de archivo
+      live.now++;
+      live.max = Math.max(live.max, live.now);
+      await new Promise((r) => setTimeout(r, 5 + (n % 3) * 4)); // terminan desordenados
+      live.now--;
+      if (n === failOn) throw new Error("se cayó la conexión");
+      uploaded.push(`o/${n}`);
+      return `o/${n}`;
+    },
+    async get() { return null; },
+    async remove(keys: string[]) { removed.push(...keys); },
+    async clear() {},
+  };
+  const { setStorage } = await import("../src/storage");
+  setStorage(fakeStorage);
+
+  const client = fakeClient();
+  const repo = repoOn(client);
+  await repo.seed(buildSeed());
+  const cv = (await repo.getDb()).coverages[0];
+  const mk = (n: number) => ({ momentName: "Ceremonia", blob: new Blob([String(n)]), name: `f${n}.jpg`, kind: "photo" as const });
+  const countFiles = async () => (await repo.getDb()).files.length;
+  const before = await countFiles();
+
+  await repo.addFiles(cv.id, [0, 1, 2, 3, 4, 5, 6].map(mk));
+  assert.equal(live.max, 3, "tres a la vez, no más");
+  const added = (await repo.getDb()).files.filter((f) => f.momentId && f.storageKey.startsWith("o/")).sort((a, b) => a.order - b.order);
+  assert.deepEqual(added.map((f) => f.name), [0, 1, 2, 3, 4, 5, 6].map((n) => `f${n}.jpg`), "mismo orden en que se eligieron");
+  assert.equal(await countFiles(), before + 7);
+
+  uploaded.length = 0;
+  failOn = 5;
+  await assert.rejects(repo.addFiles(cv.id, [10, 11, 12, 5, 13, 14, 15, 16].map(mk)), /se cayó/);
+  assert.equal(await countFiles(), before + 7, "no se guardó ninguno de esa tanda");
+  assert.deepEqual([...removed].sort(), [...uploaded].sort(), "lo ya subido se borró de R2");
+  assert.ok(uploaded.length < 8, "al fallar deja de empezar archivos nuevos");
 });

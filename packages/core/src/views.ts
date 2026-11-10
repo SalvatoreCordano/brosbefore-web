@@ -7,6 +7,8 @@ import type {
   Id,
   MediaFile,
   MediaRef,
+  PlanRow,
+  Plan,
   PortfolioItem,
   PresItem,
   PublicScope,
@@ -72,6 +74,32 @@ export function coverageMoments(db: Db, coverageId: Id) {
     .filter((m) => m.coverageId === coverageId)
     .sort(byOrder)
     .map((m) => ({ moment: m, files: db.files.filter((f) => f.momentId === m.id).sort(byOrder) }));
+}
+
+export interface PlanCard {
+  id: Id;
+  num: string; // "01", "02"… según el orden por precio
+  name: string;
+  description: string;
+  priceFrom: number;
+  featured: boolean;
+  rows: PlanRow[];
+}
+
+/** Planes visibles en la web: solo los activos, del más económico al más caro. */
+export function toPublicPlans(plans: Plan[]): PlanCard[] {
+  return plans
+    .filter((p) => p.active !== false)
+    .sort((a, b) => a.priceFrom - b.priceFrom)
+    .map((p, i) => ({
+      id: p.id,
+      num: String(i + 1).padStart(2, "0"),
+      name: p.name,
+      description: p.description,
+      priceFrom: p.priceFrom,
+      featured: !!p.featured,
+      rows: p.includes,
+    }));
 }
 
 const planName = (db: Db, planId: Id | null) => db.plans.find((p) => p.id === planId)?.name ?? "";

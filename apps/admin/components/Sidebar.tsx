@@ -10,6 +10,7 @@ const NAV = [
   { href: "/", label: "Métricas" },
   { href: "/parejas", label: "Parejas", also: ["/historia"] },
   { href: "/portafolio", label: "Portafolio" },
+  { href: "/planes", label: "Planes" },
 ];
 
 export function Sidebar() {

@@ -11,12 +11,20 @@ export type PresItemRole = "main_video" | "secondary_video" | "featured_photo";
 export type PublicScope = "gallery" | "portfolio";
 export type MediaKind = "photo" | "video";
 
+/** Un renglón de la tabla de un plan: "Cobertura", "Crew", "Entregables"… con sus líneas. */
+export interface PlanRow {
+  label: string;
+  lines: string[];
+}
+
 export interface Plan {
   id: Id;
   name: string; // "the story™"
   description: string;
   priceFrom: number; // en soles
-  includes: string[];
+  includes: PlanRow[];
+  featured: boolean; // se destaca en la página de planes (solo uno)
+  active: boolean; // oculto = no sale en la web ni en el público
 }
 
 export interface Couple {
