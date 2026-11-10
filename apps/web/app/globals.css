@@ -20,6 +20,10 @@
   --radius: 18px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --gutter: clamp(16px, 3vw, 40px);
+  --page-max: 1320px; /* columna de las páginas internas */
+  --wide-max: 1440px; /* pie de página */
+  --detail-max: 880px; /* panel de historia en la home */
+  --tile-min: 280px; /* ancho mínimo de una tarjeta de la galería: define cuántas columnas caben */
   --font: "Helvetica Neue LT Std", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
@@ -35,6 +39,27 @@
   --soft: #1a1917;
   --soft-line: #2c2a27;
   --logo-filter: invert(1);
+}
+
+/* Pantallas grandes (2K y 4K): la columna crece por tramos y entran más columnas, en vez de una tira angosta al centro.
+   Hasta 1920 de ancho todo queda exactamente igual. */
+@media (min-width: 2200px) {
+  :root {
+    --gutter: 56px;
+    --page-max: 1840px;
+    --wide-max: 2000px;
+    --detail-max: 1320px;
+    --tile-min: 320px;
+  }
+}
+@media (min-width: 3000px) {
+  :root {
+    --gutter: 80px;
+    --page-max: 2640px;
+    --wide-max: 2800px;
+    --detail-max: 1900px;
+    --tile-min: 360px;
+  }
 }
 
 *,
@@ -403,7 +428,7 @@ button {
   transition: opacity 0.7s var(--ease) 0.15s, transform 0.9s var(--ease) 0.15s, visibility 0s;
 }
 .detail__inner {
-  max-width: 880px;
+  max-width: var(--detail-max);
   transition: opacity 0.35s var(--ease), transform 0.5s var(--ease);
 }
 .detail__inner.is-swapping {
@@ -567,7 +592,7 @@ button {
 /* ---------- Inner pages ---------- */
 .page {
   padding: 140px var(--gutter) 80px;
-  max-width: 1320px;
+  max-width: var(--page-max);
   margin: 0 auto;
 }
 .page__title {
@@ -753,7 +778,7 @@ button {
 .footer__logo {
   display: block;
   width: 100%;
-  max-width: 1440px;
+  max-width: var(--wide-max);
   margin: 0 auto 28px;
   filter: invert(1);
 }
@@ -762,7 +787,7 @@ button {
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 12px 28px;
-  max-width: 1440px;
+  max-width: var(--wide-max);
   margin: 0 auto;
   font-size: 12px;
   letter-spacing: 0.02em;

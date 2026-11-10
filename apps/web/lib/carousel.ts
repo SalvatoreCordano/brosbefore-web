@@ -2,6 +2,7 @@
 // Port directo de js/app.js del sitio estático: misma matemática e interacciones.
 // mountCarousel() arma todo sobre los elementos dados y devuelve una función que lo desmonta.
 import type { PortfolioItem, PortfolioPhoto } from "@bb/core";
+import { detailColumnCount, splitColumns } from "./columns";
 import { projectorSound } from "./projector-sound";
 
 export interface CarouselEls {
@@ -422,19 +423,18 @@ export function mountCarousel(els: CarouselEls, works: PortfolioItem[], navigate
   const sizeAttrs = (p: PortfolioPhoto) => (p.w && p.h ? `width="${p.w}" height="${p.h}"` : "");
   const photoRatio = (p: PortfolioPhoto) => (p.w && p.h ? p.h / p.w : 1.25);
 
-  // Galería en 2 columnas que se lee en orden (1, 2 / 3, 4…): cada foto va a la columna
-  // más corta. En mobile las columnas se aplanan y "order" mantiene la secuencia.
+  // Galería en columnas que se lee en orden (1, 2 / 3, 4…): cada foto va a la columna más corta.
+  // 2 columnas en pantallas normales, 3 en 2K y 4 en 4K. En mobile las columnas se aplanan y "order" mantiene la secuencia.
   function photoColumns(w: PortfolioItem) {
-    const cols: string[][] = [[], []];
-    const heights = [0, 0];
-    w.photos.forEach((p, n) => {
-      const c = heights[1] < heights[0] - 0.05 ? 1 : 0; // casi empate → izquierda, para no invertir el orden
-      heights[c] += photoRatio(p);
-      cols[c].push(
-        `<img src="${esc(p.src)}" alt="${esc(w.couple)} — foto ${n + 1}" loading="lazy" style="order:${n}" ${sizeAttrs(p)} />`
-      );
-    });
-    return cols.map((c) => `<div class="photos__col">${c.join("")}</div>`).join("");
+    const cols = splitColumns(w.photos, photoRatio, detailColumnCount(innerWidth));
+    return cols
+      .map(
+        (c) =>
+          `<div class="photos__col">${c
+            .map(({ item: p, n }) => `<img src="${esc(p.src)}" alt="${esc(w.couple)} — foto ${n + 1}" loading="lazy" style="order:${n}" ${sizeAttrs(p)} />`)
+            .join("")}</div>`
+      )
+      .join("");
   }
 
   function detailHTML(w: PortfolioItem, i: number) {

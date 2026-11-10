@@ -1,7 +1,8 @@
 "use client";
 // Piezas de media compartidas por la ficha pública y el portal.
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { COVERAGE_LABEL, type CoverageType, type MediaView } from "@bb/core";
+import { photoColumnCount, splitColumns } from "@/lib/columns";
 
 /** Video con portada: al tocar play carga YouTube (embed) o el archivo MP4. */
 export function VideoPlayer({ video, title }: { video: MediaView; title: string }) {
@@ -38,20 +39,25 @@ export function VideoPlayer({ video, title }: { video: MediaView; title: string 
   );
 }
 
-/** Fotos en 2 columnas que se leen en orden (1, 2 / 3, 4…); en móvil, una sola columna. */
+/** Fotos en columnas que se leen en orden (1, 2 / 3, 4…): 2 en pantallas normales y más cuando hay ancho (2K, 4K). En móvil, una sola. */
 export function PhotoColumns({ photos, alt }: { photos: MediaView[]; alt: string }) {
-  const cols: { p: MediaView; n: number }[][] = [[], []];
-  const heights = [0, 0];
-  photos.forEach((p, n) => {
-    const c = heights[1] < heights[0] - 0.05 ? 1 : 0; // casi empate → izquierda, para no invertir el orden
-    heights[c] += p.w && p.h ? p.h / p.w : 1.25;
-    cols[c].push({ p, n });
-  });
+  const box = useRef<HTMLDivElement>(null);
+  const [count, setCount] = useState(2);
+  useLayoutEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const measure = () => setCount(photoColumnCount(el.clientWidth));
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const cols = splitColumns(photos, (p) => (p.w && p.h ? p.h / p.w : 1.25), count);
   return (
-    <div className="photos">
+    <div className="photos" ref={box}>
       {cols.map((col, ci) => (
         <div className="photos__col" key={ci}>
-          {col.map(({ p, n }) => (
+          {col.map(({ item: p, n }) => (
             <img key={p.id} src={p.src || undefined} alt={`${alt} — foto ${n + 1}`} loading="lazy" width={p.w} height={p.h} style={{ order: n }} />
           ))}
         </div>

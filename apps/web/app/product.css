@@ -294,7 +294,7 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--tile-min)), 1fr));
   gap: 28px 16px;
 }
 .tile__link {
@@ -340,7 +340,8 @@
 .profile__banner,
 .pres__banner {
   position: relative;
-  height: min(78vh, 760px);
+  /* 760 px como siempre hasta 1920 de ancho; en pantallas más anchas crece con el ancho para no quedar como una tira */
+  height: min(78vh, max(760px, 38vw));
   background: var(--soft);
   overflow: hidden;
 }
@@ -390,7 +391,7 @@
 }
 .video-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, calc(var(--tile-min) + 40px)), 1fr));
   gap: 12px;
   margin-bottom: 56px;
 }
@@ -618,7 +619,7 @@
 }
 .pres__body {
   padding: 56px var(--gutter) 120px;
-  max-width: 1320px;
+  max-width: var(--page-max);
   margin: 0 auto;
 }
 .pres__message {
@@ -665,7 +666,7 @@
 .downloads,
 .thanks {
   padding: 48px var(--gutter) 96px;
-  max-width: 1100px;
+  max-width: calc(var(--page-max) - 220px);
   margin: 0 auto;
 }
 .downloads__head {
