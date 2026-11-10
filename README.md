@@ -59,6 +59,11 @@ El admin va detrás de Cloudflare Access (también su URL `*.workers.dev`). Las 
 Las fotos y videos van a R2 a través de un Worker propio (`apps/api`). Pasos de puesta en marcha, buckets y límites en
 [apps/api/README.md](apps/api/README.md).
 
+## Respaldos
+
+Cada lunes se respalda la base de Supabase, cifrada, en un bucket privado de R2. Puesta en marcha y cómo restaurar en
+[docs/RESPALDOS.md](docs/RESPALDOS.md).
+
 ## Cómo trabajamos
 
 Flujo: **rama de trabajo → PR a `development` → PR de `development` a `main`**. Cloudflare construye y publica solo al fusionar a `main`.

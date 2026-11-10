@@ -267,3 +267,37 @@ test("planes: el público solo ve los activos, la pareja no los edita y el conte
     ["plan_story", true, "Cobertura", 4],
   ]);
 });
+
+test("respaldos: backup_reader lee todo a pesar de RLS, no escribe y una tabla sin política se detecta", async () => {
+  const ops = readFileSync(new URL("../../../supabase/ops/backup_role.sql", import.meta.url), "utf8");
+  // la misma consulta que usa scripts/backup.sh para detectar tablas sin política
+  const script = readFileSync(new URL("../../../scripts/backup.sh", import.meta.url), "utf8");
+  const detect = /psql "\$DB_URL" -Atc "([^"]+)"/.exec(script)[1];
+  const missing = async () => (await db.query(detect)).rows.map((r) => r.relname);
+
+  await assert.rejects(db.exec(ops), /Primero crea el usuario/); // sin el usuario, avisa en vez de seguir
+  await db.exec("create role backup_reader login password 'x'");
+  await db.exec(ops);
+  await db.exec(ops); // se puede repetir
+
+  const count = async (t) => (await db.query(`select count(*)::int as n from ${t}`)).rows[0].n;
+  for (const t of ["couples", "files", "members", "presentations", "presentation_published", "testimonials", "admins", "auth.users"]) {
+    const real = await count(t); // como administrador de la base: todas las filas
+    const seen = await as("backup_reader", null, () => count(t));
+    assert.equal(seen, real, `${t}: el respaldo ve ${seen} de ${real}`);
+  }
+  assert.ok((await count("couples")) > 0 && (await count("members")) > 0, "la prueba tiene datos");
+
+  await as("backup_reader", null, async () => {
+    await assert.rejects(db.exec("insert into plans (id, name) values ('zz', 'zz')"), /permission denied|read-only/);
+    await assert.rejects(db.exec("update couples set names = 'x'"), /permission denied|read-only/);
+    await assert.rejects(db.exec("delete from files"), /permission denied|read-only/);
+  });
+
+  assert.deepEqual(await missing(), [], "con el script aplicado, ninguna tabla queda sin política");
+  await db.exec("create table tabla_nueva (id int); alter table tabla_nueva enable row level security;");
+  assert.deepEqual(await missing(), ["tabla_nueva"], "una tabla nueva se detecta");
+  assert.equal(await as("backup_reader", null, () => count("tabla_nueva")), 0, "y sin política el respaldo la vería vacía");
+  await db.exec(ops);
+  assert.deepEqual(await missing(), [], "al repetir el script queda cubierta");
+});
