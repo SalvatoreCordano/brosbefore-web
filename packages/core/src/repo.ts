@@ -48,7 +48,6 @@ export interface Repo {
   readonly mode: "mock" | "supabase";
   getDb(): Promise<Db>;
   subscribe(listener: () => void): () => void;
-  resetDemo(): Promise<void>;
 
   // ---- parejas ----
   createCouple(names: string): Promise<Id>;
@@ -166,7 +165,6 @@ export abstract class DbRepo implements Repo {
   protected abstract commit(prev: Db, next: Db): Promise<void>;
   protected async afterCoupleDeleted(): Promise<void> {}
 
-  abstract resetDemo(): Promise<void>;
   abstract getSession(): Promise<Session | null>;
   abstract getInvite(token: string): Promise<{ email: string; names: string } | null>;
   abstract registerWithInvite(token: string, name: string, password: string): Promise<void>;

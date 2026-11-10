@@ -18,14 +18,14 @@ Base de datos y accesos de brosbefore. Proyecto: `nscibtisjzfflnjhwhwi`.
    Repetir para cada persona del equipo.
 4. **Conectar las apps:** en Cloudflare, en las **variables de compilación** de los dos Workers, agregar
    `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` (la llave *anon*, que es pública) y relanzar el build.
-   Sin esas variables las apps usan el modo demo con datos de ejemplo.
+   Sin esas variables las apps usan el modo local con datos de ejemplo (solo para desarrollo).
 
 **Nunca** poner la llave `service_role` en variables `NEXT_PUBLIC_*` ni en el repo.
 
 ## Probar en local contra Supabase
 
 Crear `apps/web/.env.local` y `apps/admin/.env.local` (están ignorados por git) con las dos variables de arriba.
-Para volver al modo demo, borrar esos archivos.
+Para volver al modo local, borrar esos archivos.
 
 ## Reglas de acceso (RLS)
 

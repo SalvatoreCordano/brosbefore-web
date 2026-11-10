@@ -266,10 +266,6 @@ export class SupabaseRepo extends DbRepo {
     if (storage instanceof MockStorage) throw new Error("La subida de archivos no está conectada (falta NEXT_PUBLIC_API_URL).");
   }
 
-  async resetDemo() {
-    throw new Error("No disponible con datos reales.");
-  }
-
   // ---------- portal de la pareja ----------
   private async uidNow() {
     return (await this.sb.auth.getSession()).data.session?.user.id ?? null;

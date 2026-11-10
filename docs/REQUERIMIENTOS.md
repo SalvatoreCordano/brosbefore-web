@@ -358,7 +358,7 @@ Editar los planes (nombre, descripción, precio "desde", qué incluye). De aquí
 ### Qué se simula en el mock
 | Real (sandbox/main) | En el mock |
 |---|---|
-| Base de datos Supabase | Datos de ejemplo + `localStorage` (persisten en el navegador), con un botón **"Restablecer demo"** |
+| Base de datos Supabase | Datos de ejemplo + `localStorage` (persisten en el navegador) |
 | Archivos en R2 | Archivos guardados en el navegador (IndexedDB) y fotos de ejemplo |
 | Login e invitaciones (Supabase Auth + Resend) | Usuarios de demo; la invitación muestra el enlace en vez de enviar un correo |
 | Admin protegido (Cloudflare Access) | Entrada directa con un usuario de demo |

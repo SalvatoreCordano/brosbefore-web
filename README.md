@@ -29,11 +29,12 @@ pnpm build          # export estático de las dos apps en apps/*/out
 | `/portal/login` · `/portal/registro?token=` · `/portal/recuperar` | Acceso (solo por invitación) |
 | `/admin` | Métricas · Parejas · Portafolio · Editor de historia (`/admin/historia?id=`) |
 
-**Cuentas de la demo** (también aparecen en la pantalla de login): ver `DEMO_ACCOUNTS` en
-`packages/core/src/seed/index.ts`. En el admin, "Restablecer demo" vuelve a los datos de ejemplo.
+**Modo local:** sin las variables de Supabase las apps usan datos de ejemplo guardados en el navegador (sirve para
+desarrollar la web y el admin sin conexión). El portal de las parejas no tiene cuentas en ese modo: para probarlo,
+`supabase/README.md` explica cómo conectar un `.env.local`.
 
 - **Datos:** todas las pantallas leen y escriben por `repo` (`packages/core/src/repo.ts`). Hoy es `MockRepo` (`localStorage` + archivos en IndexedDB del navegador); en `sandbox` se reemplaza por Supabase + R2 sin tocar las pantallas.
-- **Datos de ejemplo:** `packages/core/src/seed/` (parejas originales en `legacy-works.ts`) más ejemplos de pedida, preboda, cuentas y testimonios.
+- **Datos de ejemplo:** `packages/core/src/seed/` (parejas originales en `legacy-works.ts`) más ejemplos de pedida, preboda y momentos.
 - **Imágenes:** la fuente es `/assets`; cada app la copia a su `public/assets` al arrancar (no se commitea).
 - **Admin en local:** corre en el puerto 3004, pero la web lo sirve en `localhost:3003/admin` para que ambos compartan los datos de la demo (mismo origen).
 - **Publicar:** `.github/workflows/demo-pages.yml` (web en la raíz, admin en `/admin`), solo desde `main`. Usa `NEXT_PUBLIC_BASE_PATH`.

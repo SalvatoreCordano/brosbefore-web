@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { DEMO_ACCOUNTS, isEmail, repo } from "@bb/core";
+import { isEmail, repo } from "@bb/core";
 import { asset } from "@/lib/asset";
 
 function AuthCard({ title, lead, children }: { title: string; lead?: string; children?: React.ReactNode }) {
@@ -69,23 +69,7 @@ export function Login() {
       </form>
 
       {repo.mode === "mock" && (
-      <div className="demo-box">
-        <span className="eyebrow">Cuentas de la demo</span>
-        {DEMO_ACCOUNTS.map((a) => (
-          <button
-            key={a.email}
-            type="button"
-            className="demo-box__btn"
-            onClick={() => {
-              setEmail(a.email);
-              setPassword(a.password);
-            }}
-          >
-            <strong>{a.couple}</strong>
-            <span>{a.email}</span>
-          </button>
-        ))}
-      </div>
+        <p className="hint">Modo local sin Supabase: el portal necesita cuentas reales. Configura apps/web/.env.local (ver supabase/README.md).</p>
       )}
     </AuthCard>
   );

@@ -897,33 +897,6 @@
 .auth__alt {
   align-self: center;
 }
-.demo-box {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px dashed var(--soft-line);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.demo-box__btn {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: var(--soft);
-  text-align: left;
-  font-size: 13px;
-}
-.demo-box__btn strong {
-  font-weight: 400;
-}
-.demo-box__btn span {
-  color: var(--muted);
-  font-size: 12px;
-}
-
 /* en las páginas internas el navbar siempre es sólido (los banners pueden ser oscuros) */
 .nav--inner {
   background: var(--bg);

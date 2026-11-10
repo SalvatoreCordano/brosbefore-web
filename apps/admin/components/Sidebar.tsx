@@ -20,11 +20,6 @@ export function Sidebar() {
     repo.getAdmin().then((a) => setAdminEmail(a?.email ?? ""));
   }, []);
   const isMock = repo.mode === "mock";
-  const reset = async () => {
-    if (!confirm("¿Volver a los datos de ejemplo? Se pierden los cambios y archivos de esta demo.")) return;
-    await repo.resetDemo();
-  };
-
   return (
     <aside className="sidebar">
       <Link href="/" className="sidebar__logo" aria-label="Admin — inicio">
@@ -44,14 +39,7 @@ export function Sidebar() {
         </a>
       </nav>
       <div className="sidebar__foot">
-        {isMock && (
-          <>
-            <span className="badge">Demo · datos de ejemplo</span>
-            <button type="button" className="link-btn" onClick={reset}>
-              Restablecer demo
-            </button>
-          </>
-        )}
+        {isMock && <span className="badge">Modo local · datos de ejemplo</span>}
         <div className="sidebar__user">
           <span className="avatar">{isMock ? "CZ" : (adminEmail[0] ?? "A").toUpperCase()}</span>
           <span>{isMock ? "Carozzi & Zelmar" : adminEmail}</span>
