@@ -1,8 +1,8 @@
 "use client";
 // Piezas de UI del admin.
 import { useEffect, useState } from "react";
-import type { MediaFile } from "@bb/core";
-import { resolve } from "@/lib/asset";
+import { repo, type MediaFile } from "@bb/core";
+import { resolve, webUrl } from "@/lib/asset";
 
 export function Toggle({
   checked,
@@ -26,6 +26,19 @@ export function Toggle({
       <input type="checkbox" role="switch" checked={checked} disabled={disabled} onChange={(e) => onChange(e.target.checked)} />
       <span className="toggle__track" aria-hidden="true" />
     </label>
+  );
+}
+
+/** Abre el portal como lo verá la pareja. Pasa la sesión del admin en el fragmento (#), que no viaja por la red. */
+export function PreviewButton({ coupleId, children }: { coupleId: string; children: React.ReactNode }) {
+  const open = () => {
+    const token = repo.previewToken();
+    window.open(webUrl(`/portal?preview=${coupleId}`) + (token ? `#t=${token}` : ""), "_blank", "noopener");
+  };
+  return (
+    <button type="button" className="btn btn--ghost btn--sm" onClick={open}>
+      {children}
+    </button>
   );
 }
 

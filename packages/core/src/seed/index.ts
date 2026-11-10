@@ -1,35 +1,27 @@
 // Datos iniciales del mock: las parejas del sitio actual convertidas al modelo nuevo,
-// más ejemplos (pedida, preboda, momentos, presentación publicada, cuentas y testimonios)
-// para poder mostrar el flujo completo en una demo.
-import type { CoverageType, Db, MediaFile, Plan, PresItem, PublicItem, Tag } from "../types";
+// más ejemplos (pedida, preboda y momentos) para poder desarrollar y probar sin conexión.
+import type { CoverageType, Db, MediaFile, Plan, PublicItem, Tag } from "../types";
 import { legacyWorks } from "./legacy-works";
 
-export const DB_VERSION = 2;
-
-/** Cuentas de prueba del portal (solo existen en la demo). */
-export const DEMO_ACCOUNTS = [
-  { email: "ceziel@demo.brosbefore.pe", password: "demo1234", couple: "Ceziel & Gianfranco" },
-  { email: "gabriela@demo.brosbefore.pe", password: "demo1234", couple: "Paul & Gabriela" },
-];
-// sha256(`${email}:${password}`) — mismo cálculo que MockRepo.hashPassword
-const DEMO_HASHES: Record<string, string> = {
-  "ceziel@demo.brosbefore.pe": "11e896fa46f90b40dac9f5d2dfd417705604a336b91050868069c4ce53d05a68",
-  "gabriela@demo.brosbefore.pe": "764a13b30b73bd2fee50122ac42dad2f3011c05696a59ca7a7b74d93a0d7d213",
-};
+export const DB_VERSION = 5; // 5: categorías de planes; 4: sin cuentas ni historia de demo; 3: planes con renglones, destacado y activo
 
 const SEED_DATE = "2026-10-04T00:00:00.000Z";
 
+const CREW_1 = "1 fotógrafo principal y 1 filmmaker";
 export const seedPlans: Plan[] = [
   {
     id: "plan_essentials",
     name: "essentials™",
     description: "Lo esencial para recordar su día tal como fue.",
     priceFrom: 4500,
+    category: "wedding",
+    featured: false,
+    active: true,
     includes: [
-      "El día de la boda, hasta 6 horas de cobertura continua",
-      "1 fotógrafo principal y 1 filmmaker",
-      "Galería online personalizada (+300 fotos)",
-      "Un highlight film (2:30 a 3 min)",
+      { label: "Cobertura", lines: ["El día de la boda, hasta 6 horas de cobertura continua"] },
+      { label: "Crew", lines: [CREW_1] },
+      { label: "Entregables", lines: ["Galería online personalizada (+300 fotos)", "Un highlight film (2:30 a 3 min)"] },
+      { label: "Entrega", lines: ["4 a 6 semanas después de la boda"] },
     ],
   },
   {
@@ -37,12 +29,21 @@ export const seedPlans: Plan[] = [
     name: "the story™",
     description: "Para quienes quieren verse, sentirse y reconocerse en su historia.",
     priceFrom: 8000,
+    category: "wedding",
+    featured: true,
+    active: true,
     includes: [
-      "2 días: sesión pre-boda (fotos y video) y el día de la boda (hasta 8 hrs)",
-      "1 fotógrafo principal y 1 filmmaker",
-      "Galería online personalizada (+500 fotos), algunas análogas (cámara a rollo)",
-      "Un story film (3 a 4:30 min)",
-      "Un wedding reel (en 24 hrs / 30 s)",
+      { label: "Cobertura", lines: ["2 días: sesión pre-boda (fotos y video) y el día de la boda (hasta 8 hrs)"] },
+      { label: "Crew", lines: [CREW_1] },
+      {
+        label: "Entregables",
+        lines: [
+          "Galería online personalizada (+500 fotos), algunas análogas (cámara a rollo)",
+          "Un story film (3 a 4:30 min)",
+          "Un wedding reel (en 24 hrs / 30 s)",
+        ],
+      },
+      { label: "Entrega", lines: ["4 a 6 semanas después de la boda"] },
     ],
   },
   {
@@ -50,14 +51,23 @@ export const seedPlans: Plan[] = [
     name: "the legacy™",
     description: "Para quienes entienden que este recuerdo no es solo para hoy.",
     priceFrom: 12000,
+    category: "wedding",
+    featured: false,
+    active: true,
     includes: [
-      "2 días: sesión pre-boda (fotos y video) y el día de la boda (hasta 12 hrs)",
-      "2 fotógrafos y 2 filmmakers",
-      "Galería online personalizada (+800 fotos)",
-      "Galería análoga (+150 fotos en 35mm y 120mm)",
-      "Un legacy film (7 a 10 min)",
-      "Un wedding reel (en 24 hrs / 1 min)",
-      "Un dump de video (carrusel IG / 24 hrs / 5 videos colorizados)",
+      { label: "Cobertura", lines: ["2 días: sesión pre-boda (fotos y video) y el día de la boda (hasta 12 hrs)"] },
+      { label: "Crew", lines: ["2 fotógrafos y 2 filmmakers"] },
+      {
+        label: "Entregables",
+        lines: [
+          "Galería online personalizada (+800 fotos)",
+          "Galería análoga (+150 fotos en 35mm y 120mm)",
+          "Un legacy film (7 a 10 min)",
+          "Un wedding reel (en 24 hrs / 1 min)",
+          "Un dump de video (carrusel IG / 24 hrs / 5 videos colorizados)",
+        ],
+      },
+      { label: "Entrega", lines: ["6 a 8 semanas después de la boda"] },
     ],
   },
 ];
@@ -243,98 +253,5 @@ export function buildSeed(): Db {
   });
   db.tags = [...tagByName.values()];
 
-  addDemoStory(db);
   return db;
-}
-
-/** Ceziel & Gianfranco: historia completa (presentación publicada, cuentas, testimonio). */
-function addDemoStory(db: Db) {
-  const coupleId = "c_ceziel-gianfranco";
-  const pres = db.presentations.find((p) => p.coupleId === coupleId);
-  if (!pres) return;
-
-  const items: PresItem[] = [];
-  const add = (coverageId: string, fileId: string, role: PresItem["role"], order: number) =>
-    items.push({ id: `pres_${fileId}_${role}`, coverageId, fileId, role, order });
-  db.coverages
-    .filter((cv) => cv.coupleId === coupleId)
-    .forEach((cv) => {
-      const momentIds = new Set(db.moments.filter((m) => m.coverageId === cv.id).map((m) => m.id));
-      const files = db.files.filter((f) => momentIds.has(f.momentId));
-      files.filter((f) => f.kind === "video").forEach((f, n) => add(cv.id, f.id, n === 0 ? "main_video" : "secondary_video", n));
-      files.filter((f) => f.kind === "photo").forEach((f, n) => add(cv.id, f.id, "featured_photo", n));
-    });
-  db.presItems.push(...items);
-
-  Object.assign(pres, {
-    banner: { fileId: "f_ceziel-gianfranco_05", kind: "photo" },
-    message:
-      "Gracias por dejarnos entrar a su historia desde la pregunta hasta el último baile. Hicimos esto con todo el cariño para que vuelvan a este día cada vez que quieran.",
-    messageSignature: "— Carozzi & Zelmar",
-    publishedAt: SEED_DATE,
-  });
-  pres.published = {
-    banner: pres.banner,
-    songKey: null,
-    songName: null,
-    message: pres.message,
-    messageSignature: pres.messageSignature,
-    items: structuredClone(items),
-  };
-
-  db.members.push(
-    {
-      id: "mem_ceziel",
-      coupleId,
-      email: "ceziel@demo.brosbefore.pe",
-      name: "Ceziel",
-      status: "active",
-      invitedAt: SEED_DATE,
-      inviteToken: null,
-      passwordHash: DEMO_HASHES["ceziel@demo.brosbefore.pe"],
-    },
-    {
-      id: "mem_gianfranco",
-      coupleId,
-      email: "gianfranco@demo.brosbefore.pe",
-      name: "",
-      status: "invited",
-      invitedAt: SEED_DATE,
-      inviteToken: "demo-invitacion-gianfranco",
-      passwordHash: null,
-    },
-    {
-      id: "mem_gabriela",
-      coupleId: "c_paul-gabriela",
-      email: "gabriela@demo.brosbefore.pe",
-      name: "Gabriela",
-      status: "active",
-      invitedAt: SEED_DATE,
-      inviteToken: null,
-      passwordHash: DEMO_HASHES["gabriela@demo.brosbefore.pe"],
-    }
-  );
-
-  db.testimonials.push(
-    {
-      id: "tes_ceziel",
-      coupleId,
-      memberId: "mem_ceziel",
-      originalText:
-        "chicos gracias de verdad, lloramos viendo el video!!! se nota todo el amor q le ponen, los recomendamos 100%",
-      publishedText:
-        "Lloramos viendo el film. Se nota todo el amor que le ponen a cada detalle. Los recomendamos con los ojos cerrados.",
-      reposted: true,
-      updatedAt: SEED_DATE,
-    },
-    {
-      id: "tes_gabriela",
-      coupleId: "c_paul-gabriela",
-      memberId: "mem_gabriela",
-      originalText: "Nos encantó todo, las fotos quedaron hermosas y el equipo fue súper atento todo el día.",
-      publishedText: "",
-      reposted: false,
-      updatedAt: SEED_DATE,
-    }
-  );
 }

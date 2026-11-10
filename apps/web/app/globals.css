@@ -20,6 +20,10 @@
   --radius: 18px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --gutter: clamp(16px, 3vw, 40px);
+  --page-max: 1320px; /* columna de las páginas internas */
+  --wide-max: 1440px; /* pie de página */
+  --detail-max: 880px; /* panel de historia en la home */
+  --tile-min: 280px; /* ancho mínimo de una tarjeta de la galería: define cuántas columnas caben */
   --font: "Helvetica Neue LT Std", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
@@ -35,6 +39,27 @@
   --soft: #1a1917;
   --soft-line: #2c2a27;
   --logo-filter: invert(1);
+}
+
+/* Pantallas grandes (2K y 4K): la columna crece por tramos y entran más columnas, en vez de una tira angosta al centro.
+   Hasta 1920 de ancho todo queda exactamente igual. */
+@media (min-width: 2200px) {
+  :root {
+    --gutter: 56px;
+    --page-max: 1840px;
+    --wide-max: 2000px;
+    --detail-max: 1320px;
+    --tile-min: 320px;
+  }
+}
+@media (min-width: 3000px) {
+  :root {
+    --gutter: 80px;
+    --page-max: 2640px;
+    --wide-max: 2800px;
+    --detail-max: 1900px;
+    --tile-min: 360px;
+  }
 }
 
 *,
@@ -403,7 +428,7 @@ button {
   transition: opacity 0.7s var(--ease) 0.15s, transform 0.9s var(--ease) 0.15s, visibility 0s;
 }
 .detail__inner {
-  max-width: 880px;
+  max-width: var(--detail-max);
   transition: opacity 0.35s var(--ease), transform 0.5s var(--ease);
 }
 .detail__inner.is-swapping {
@@ -537,10 +562,42 @@ button {
 .photos img {
   width: 100%;
   height: auto;
-  margin-bottom: 10px;
   border-radius: 12px;
   break-inside: avoid;
   background: var(--soft);
+}
+/* cada foto es un botón que la abre en grande (zoom); el margen y el orden viven en el botón */
+.photos__open {
+  display: block;
+  width: 100%;
+  padding: 0;
+  margin-bottom: 10px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  cursor: zoom-in;
+}
+.photos__open:focus-visible,
+.dl-file__open:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+/* Visor de fotos (PhotoSwipe): siempre oscuro, con la tipografía y los colores del sitio */
+.pswp {
+  --pswp-bg: #0f0e0d;
+  --pswp-placeholder-bg: #1a1917;
+  --pswp-icon-color: #f1efeb;
+  --pswp-icon-color-secondary: #1b1916;
+  --pswp-error-text-color: #f1efeb;
+  font-family: var(--font);
+}
+.pswp__counter {
+  font-size: 13px;
+  letter-spacing: 0;
+  color: #f1efeb;
+}
+html.has-viewer {
+  overflow: hidden;
 }
 .detail__next {
   margin-top: 56px;
@@ -567,7 +624,7 @@ button {
 /* ---------- Inner pages ---------- */
 .page {
   padding: 140px var(--gutter) 80px;
-  max-width: 1320px;
+  max-width: var(--page-max);
   margin: 0 auto;
 }
 .page__title {
@@ -614,9 +671,64 @@ button {
   max-width: 1000px;
 }
 .plans {
+  --cols: 3;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
   gap: 12px;
+  /* con 2 planes las tarjetas no se estiran: miden lo mismo que en una fila de 3, y quedan centradas */
+  max-width: max(calc(var(--cols) * 33.34%), min(100%, 380px));
+  margin-inline: auto;
+  animation: fadeIn 0.45s var(--ease);
+}
+/* Selector de tipo de plan, como el de mensual/anual en un pago */
+.plan-switch {
+  --pad: 4px;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto 36px;
+  padding: var(--pad);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--soft);
+}
+.plan-switch__thumb {
+  position: absolute;
+  top: var(--pad);
+  bottom: var(--pad);
+  left: var(--pad);
+  width: calc((100% - 2 * var(--pad)) / var(--n));
+  border-radius: 999px;
+  background: var(--ink);
+  transform: translateX(calc(var(--i) * 100%));
+  transition: transform 0.45s var(--ease);
+}
+.plan-switch__tab {
+  position: relative;
+  height: 40px;
+  padding: 0 clamp(14px, 4vw, 30px);
+  border-radius: 999px;
+  font-size: 14px;
+  color: var(--body);
+  white-space: nowrap;
+  transition: color 0.3s;
+}
+.plan-switch__tab:hover {
+  color: var(--ink);
+}
+.plan-switch__tab[aria-selected="true"] {
+  color: var(--bg);
+}
+.plan-switch__tab:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+@media (pointer: coarse) {
+  .plan-switch__tab {
+    height: 44px;
+  }
 }
 .plan {
   border: 1px solid var(--line);
@@ -698,7 +810,7 @@ button {
 .footer__logo {
   display: block;
   width: 100%;
-  max-width: 1440px;
+  max-width: var(--wide-max);
   margin: 0 auto 28px;
   filter: invert(1);
 }
@@ -707,7 +819,7 @@ button {
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 12px 28px;
-  max-width: 1440px;
+  max-width: var(--wide-max);
   margin: 0 auto;
   font-size: 12px;
   letter-spacing: 0.02em;
@@ -728,6 +840,9 @@ button {
   .plans,
   .about {
     grid-template-columns: 1fr;
+  }
+  .plans {
+    max-width: none;
   }
   .about__img {
     position: static;
@@ -782,6 +897,9 @@ button {
 @media (prefers-reduced-motion: reduce) {
   * {
     transition-duration: 0.01ms !important;
+  }
+  .plans {
+    animation: none;
   }
 }
 

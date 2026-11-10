@@ -247,3 +247,66 @@ test("readable_keys y storage_used_bytes: el admin lee todo, la pareja solo lo s
     assert.equal(await used(), 0);
   });
 });
+
+test("planes: el público solo ve los activos, la pareja no los edita y el contenido inicial quedó en renglones", async () => {
+  await db.exec(`update plans set active = false where id = 'plan_story'`);
+  await as("anon", null, async () => {
+    const r = await ids("select id from plans");
+    assert.ok(r.includes("plan_essentials") && !r.includes("plan_story"), "el oculto no se ve");
+  });
+  await as("authenticated", USER_A, async () => assert.ok(!(await ids("select id from plans")).includes("plan_story")));
+  await as("authenticated", ADMIN, async () => assert.ok((await ids("select id from plans")).includes("plan_story"), "el admin sí lo ve"));
+  await as("authenticated", USER_A, async () => assert.equal((await db.query("update plans set name = 'x' returning id")).rows.length, 0));
+
+  const { rows } = await db.query(
+    "select id, featured, includes -> 0 ->> 'label' as label, jsonb_array_length(includes) as n from plans where id like 'plan_%' order by id"
+  );
+  assert.deepEqual(rows.map((r) => [r.id, r.featured, r.label, r.n]), [
+    ["plan_essentials", false, "Cobertura", 4],
+    ["plan_legacy", false, "Cobertura", 4],
+    ["plan_story", true, "Cobertura", 4],
+  ]);
+});
+
+test("planes: los iniciales son Wedding y no se acepta una categoría inventada", async () => {
+  const { rows } = await db.query("select id, category from plans where id like 'plan_%' order by id");
+  assert.deepEqual(rows.map((r) => r.category), ["wedding", "wedding", "wedding"]);
+  await assert.rejects(db.exec("insert into plans (id, name, category) values ('zz', 'zz', 'otra')"), /check/i);
+  await db.exec("insert into plans (id, name, category, active, price_from) values ('d1', 'dates uno', 'dates', true, 1000)");
+  await as("anon", null, async () => assert.deepEqual(await ids("select id from plans where category = 'dates'"), ["d1"]));
+  await db.exec("delete from plans where id = 'd1'");
+});
+
+test("respaldos: backup_reader lee todo a pesar de RLS, no escribe y una tabla sin política se detecta", async () => {
+  const ops = readFileSync(new URL("../../../supabase/ops/backup_role.sql", import.meta.url), "utf8");
+  // la misma consulta que usa scripts/backup.sh para detectar tablas sin política
+  const script = readFileSync(new URL("../../../scripts/backup.sh", import.meta.url), "utf8");
+  const detect = /psql "\$DB_URL" -Atc "([^"]+)"/.exec(script)[1];
+  const missing = async () => (await db.query(detect)).rows.map((r) => r.relname);
+
+  await assert.rejects(db.exec(ops), /Primero crea el usuario/); // sin el usuario, avisa en vez de seguir
+  await db.exec("create role backup_reader login password 'x'");
+  await db.exec(ops);
+  await db.exec(ops); // se puede repetir
+
+  const count = async (t) => (await db.query(`select count(*)::int as n from ${t}`)).rows[0].n;
+  for (const t of ["couples", "files", "members", "presentations", "presentation_published", "testimonials", "admins", "auth.users"]) {
+    const real = await count(t); // como administrador de la base: todas las filas
+    const seen = await as("backup_reader", null, () => count(t));
+    assert.equal(seen, real, `${t}: el respaldo ve ${seen} de ${real}`);
+  }
+  assert.ok((await count("couples")) > 0 && (await count("members")) > 0, "la prueba tiene datos");
+
+  await as("backup_reader", null, async () => {
+    await assert.rejects(db.exec("insert into plans (id, name) values ('zz', 'zz')"), /permission denied|read-only/);
+    await assert.rejects(db.exec("update couples set names = 'x'"), /permission denied|read-only/);
+    await assert.rejects(db.exec("delete from files"), /permission denied|read-only/);
+  });
+
+  assert.deepEqual(await missing(), [], "con el script aplicado, ninguna tabla queda sin política");
+  await db.exec("create table tabla_nueva (id int); alter table tabla_nueva enable row level security;");
+  assert.deepEqual(await missing(), ["tabla_nueva"], "una tabla nueva se detecta");
+  assert.equal(await as("backup_reader", null, () => count("tabla_nueva")), 0, "y sin política el respaldo la vería vacía");
+  await db.exec(ops);
+  assert.deepEqual(await missing(), [], "al repetir el script queda cubierta");
+});

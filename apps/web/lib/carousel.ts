@@ -2,6 +2,8 @@
 // Port directo de js/app.js del sitio estático: misma matemática e interacciones.
 // mountCarousel() arma todo sobre los elementos dados y devuelve una función que lo desmonta.
 import type { PortfolioItem, PortfolioPhoto } from "@bb/core";
+import { detailColumnCount, splitColumns } from "./columns";
+import { openViewer } from "./viewer";
 import { projectorSound } from "./projector-sound";
 
 export interface CarouselEls {
@@ -404,7 +406,7 @@ export function mountCarousel(els: CarouselEls, works: PortfolioItem[], navigate
 
   // ---------- teclado ----------
   on(window, "keydown", (e: KeyboardEvent) => {
-    if (document.body.classList.contains("menu-open")) return;
+    if (document.body.classList.contains("menu-open") || document.documentElement.classList.contains("has-viewer")) return;
     if (["ArrowRight", "ArrowDown"].includes(e.key)) {
       e.preventDefault();
       goTo(Math.round(target) + 1);
@@ -422,19 +424,21 @@ export function mountCarousel(els: CarouselEls, works: PortfolioItem[], navigate
   const sizeAttrs = (p: PortfolioPhoto) => (p.w && p.h ? `width="${p.w}" height="${p.h}"` : "");
   const photoRatio = (p: PortfolioPhoto) => (p.w && p.h ? p.h / p.w : 1.25);
 
-  // Galería en 2 columnas que se lee en orden (1, 2 / 3, 4…): cada foto va a la columna
-  // más corta. En mobile las columnas se aplanan y "order" mantiene la secuencia.
+  // Galería en columnas que se lee en orden (1, 2 / 3, 4…): cada foto va a la columna más corta.
+  // 2 columnas en pantallas normales, 3 en 2K y 4 en 4K. En mobile las columnas se aplanan y "order" mantiene la secuencia.
   function photoColumns(w: PortfolioItem) {
-    const cols: string[][] = [[], []];
-    const heights = [0, 0];
-    w.photos.forEach((p, n) => {
-      const c = heights[1] < heights[0] - 0.05 ? 1 : 0; // casi empate → izquierda, para no invertir el orden
-      heights[c] += photoRatio(p);
-      cols[c].push(
-        `<img src="${esc(p.src)}" alt="${esc(w.couple)} — foto ${n + 1}" loading="lazy" style="order:${n}" ${sizeAttrs(p)} />`
-      );
-    });
-    return cols.map((c) => `<div class="photos__col">${c.join("")}</div>`).join("");
+    const cols = splitColumns(w.photos, photoRatio, detailColumnCount(innerWidth));
+    return cols
+      .map(
+        (c) =>
+          `<div class="photos__col">${c
+            .map(
+              ({ item: p, n }) =>
+                `<button type="button" class="photos__open" style="order:${n}" data-photo="${n}" aria-label="Ver la foto ${n + 1} en grande"><img src="${esc(p.src)}" alt="" loading="lazy" ${sizeAttrs(p)} /></button>`
+            )
+            .join("")}</div>`
+      )
+      .join("");
   }
 
   function detailHTML(w: PortfolioItem, i: number) {
@@ -524,6 +528,15 @@ export function mountCarousel(els: CarouselEls, works: PortfolioItem[], navigate
     if (more) {
       document.body.classList.remove("is-detail");
       return navigate(more.dataset.href!);
+    }
+    const photo = t.closest<HTMLElement>("[data-photo]");
+    if (photo && selected >= 0) {
+      const w = works[selected];
+      return void openViewer(
+        w.photos.map((p, n) => ({ src: p.src, w: p.w, h: p.h, alt: `${w.couple} — foto ${n + 1}` })),
+        Number(photo.dataset.photo),
+        (i) => detailEl.querySelector<HTMLElement>(`[data-photo="${i}"] img`)
+      );
     }
     const play = t.closest(".video__play");
     if (play && selected >= 0) {

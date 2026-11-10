@@ -153,7 +153,8 @@ h2 {
 }
 .main {
   padding: 40px clamp(20px, 4vw, 56px) 80px;
-  max-width: 1200px;
+  /* 1200 px como siempre hasta 1920 de ancho; en 2K y 4K crece para aprovechar la pantalla */
+  max-width: clamp(1200px, 62vw, 2200px);
   width: 100%;
 }
 

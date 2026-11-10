@@ -3,6 +3,7 @@
 // Las descargas múltiples se arman como .zip en el navegador, sin costo de servidor.
 import { useState } from "react";
 import { downloadUrl, downloadZip, formatBytes, type DownloadsView, type MediaView } from "@bb/core";
+import { openViewer } from "@/lib/viewer";
 
 type Item = { path: string; file: MediaView };
 
@@ -27,6 +28,18 @@ export function Downloads({ view, names }: { view: DownloadsView; names: string 
     } finally {
       setBusy(null);
     }
+  };
+
+  /** abre las fotos del momento en grande, empezando por la elegida */
+  const openMoment = (files: MediaView[], id: string) => {
+    const photos = files.filter((f) => f.kind === "photo" && f.src);
+    const at = photos.findIndex((f) => f.id === id);
+    if (at < 0) return;
+    openViewer(
+      photos.map((f) => ({ src: f.src, msrc: f.thumb, w: f.w, h: f.h, alt: f.name })),
+      at,
+      (k) => document.querySelector<HTMLElement>(`[data-file="${photos[k].id}"] img`)
+    );
   };
 
   if (!view.count) {
@@ -111,10 +124,13 @@ export function Downloads({ view, names }: { view: DownloadsView; names: string 
               </div>
               <ul className="dl-files">
                 {m.files.map((f) => (
-                  <li key={f.id} className="dl-file">
+                  <li key={f.id} className="dl-file" data-file={f.id}>
                     <div className="dl-file__thumb">
                       {f.kind === "photo" ? (
-                        <img src={f.thumb || f.src || undefined} alt="" loading="lazy" />
+                        // en grande se abre el original (la pareja tiene derecho a verlo con todo el detalle)
+                        <button type="button" className="dl-file__open" aria-label={`Ver ${f.name} en grande`} onClick={() => openMoment(m.files, f.id)}>
+                          <img src={f.thumb || f.src || undefined} alt="" loading="lazy" />
+                        </button>
                       ) : f.poster ? (
                         <img src={f.poster} alt="" loading="lazy" />
                       ) : (

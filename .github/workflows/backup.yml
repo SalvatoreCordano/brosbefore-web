@@ -1,0 +1,38 @@
+# Respaldo semanal de la base de Supabase, cifrado, en un bucket privado de R2 (docs/RESPALDOS.md).
+# Solo corre por horario o a mano (Actions -> Respaldo de la base -> Run workflow): nunca por un PR.
+name: Respaldo de la base
+
+on:
+  schedule:
+    - cron: "17 6 * * 1" # lunes 06:17 UTC (01:17 en Lima)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: respaldo
+  cancel-in-progress: false
+
+jobs:
+  respaldo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Herramientas (pg_dump 18, age)
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          . /etc/os-release
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-18 age
+      - name: Respaldar
+        env:
+          DB_URL: ${{ secrets.BACKUP_DB_URL }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_R2_SECRET_ACCESS_KEY }}
+          AGE_PUBKEY: ${{ vars.BACKUP_AGE_PUBKEY }}
+          R2_ENDPOINT: https://${{ vars.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+        run: bash scripts/backup.sh

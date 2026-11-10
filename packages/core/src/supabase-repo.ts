@@ -94,22 +94,25 @@ export function publicKeys(db: Db): Set<string> {
 export class SupabaseRepo extends DbRepo {
   readonly mode = "supabase" as const;
   private sb: SupabaseClient;
+  private accessToken: string | null = null;
+  private previewTokenInUse: string | null = null;
   private cache: Promise<Db> | null = null;
   private sessionCache: Promise<Session | null> | null = null;
   private userId: string | null | undefined;
   private r2: R2Storage | null = null;
 
   /** `client` solo se pasa en las pruebas; `apiUrl` es el Worker de archivos (R2) */
-  constructor(url: string, anonKey: string, client?: SupabaseClient, apiUrl?: string) {
+  constructor(private url: string, private anonKey: string, client?: SupabaseClient, apiUrl?: string) {
     super();
     this.sb = client ?? createClient(url, anonKey, { auth: { detectSessionInUrl: false } });
     if (apiUrl) {
-      const r2 = (this.r2 = new R2Storage({ api: apiUrl, token: async () => (await this.sb.auth.getSession()).data.session?.access_token ?? null }));
+      const r2 = (this.r2 = new R2Storage({ api: apiUrl, token: async () => this.previewTokenInUse ?? (await this.sb.auth.getSession()).data.session?.access_token ?? null }));
       setStorage(r2);
       mediaUrls.useSigner((keys) => r2.sign(keys));
     }
     if (typeof window !== "undefined") mediaUrls.subscribe(() => this.emit()); // llegó un enlace firmado: repintar
     this.sb.auth.onAuthStateChange((_event, session) => {
+      this.accessToken = session?.access_token ?? null; // se renueva solo, aunque el usuario no cambie
       const id = session?.user.id ?? null;
       if (id === this.userId) return; // renovar el token no cambia nada
       const first = this.userId === undefined;
@@ -263,10 +266,6 @@ export class SupabaseRepo extends DbRepo {
     if (storage instanceof MockStorage) throw new Error("La subida de archivos no está conectada (falta NEXT_PUBLIC_API_URL).");
   }
 
-  async resetDemo() {
-    throw new Error("No disponible con datos reales.");
-  }
-
   // ---------- portal de la pareja ----------
   private async uidNow() {
     return (await this.sb.auth.getSession()).data.session?.user.id ?? null;
@@ -368,5 +367,22 @@ export class SupabaseRepo extends DbRepo {
 
   async adminLogout() {
     await this.sb.auth.signOut();
+  }
+
+  // ---------- vista previa del portal (admin → web, dominios distintos) ----------
+  previewToken() {
+    return this.accessToken;
+  }
+
+  startPreview(token: string) {
+    // cliente aparte, sin guardar sesión ni renovarla: el token vive solo en esta pestaña y vence en una hora
+    this.previewTokenInUse = token;
+    this.sb = createClient(this.url, this.anonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    });
+    this.cache = null;
+    this.sessionCache = null;
+    this.emit();
   }
 }

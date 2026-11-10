@@ -1,6 +1,6 @@
 "use client";
 // Paso 1 — Datos de la pareja: nombres, URL, plan, lugar, fecha y coberturas contratadas.
-import { COVERAGE_LABEL, COVERAGE_ORDER, repo, type CoverageType } from "@bb/core";
+import { COVERAGE_LABEL, COVERAGE_ORDER, PLAN_CATEGORIES, repo, type CoverageType } from "@bb/core";
 import { Section, TextField } from "../ui";
 import type { StepProps } from "./StoryEditor";
 
@@ -31,10 +31,16 @@ export function StepDatos({ db, couple, flash }: StepProps) {
             <span className="field__label">Plan</span>
             <select value={couple.planId ?? ""} onChange={(e) => repo.updateCouple(couple.id, { planId: e.target.value || null })}>
               <option value="">Sin plan</option>
-              {db.plans.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
+              {PLAN_CATEGORIES.map((c) => (
+                <optgroup key={c.id} label={c.label}>
+                  {db.plans
+                    .filter((p) => p.category === c.id)
+                    .map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                </optgroup>
               ))}
             </select>
           </label>

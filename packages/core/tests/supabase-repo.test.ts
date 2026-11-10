@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { SupabaseRepo, publicKeys } from "../src/supabase-repo";
 import { buildSeed } from "../src/seed";
+import { toPlanGroups, toPublicPlans } from "../src/views";
 import type { Db } from "../src/types";
 
 type Row = Record<string, any>;
@@ -250,4 +251,169 @@ test("video de YouTube: se normaliza, se guarda sin archivo en R2 y se puede qui
   await repo.deleteFile(f.id);
   await assertPersisted(client, repo, "quitar video");
   assert.ok(!(await repo.getDb()).publicItems.some((i) => i.fileId === f.id));
+});
+
+test("planes: se crea oculto, valida, solo uno queda destacado y lo guardado se lee igual", async () => {
+  const client = fakeClient();
+  const repo = repoOn(client);
+  await repo.seed(buildSeed());
+
+  const id = await repo.createPlan("  the new™ ");
+  let plan = (await repo.getDb()).plans.find((p) => p.id === id)!;
+  assert.deepEqual([plan.name, plan.active, plan.priceFrom], ["the new™", false, 0]);
+
+  await repo.updatePlan(id, { active: true }); // sin precio se puede mostrar: la web dice "Consultar precio"
+  const noPrice = toPublicPlans((await repo.getDb()).plans);
+  assert.deepEqual(noPrice.map((p) => [p.name, p.priceFrom]).at(-1), ["the new™", 0], "sin precio va al final");
+  await repo.updatePlan(id, { active: false });
+  await assert.rejects(repo.updatePlan(id, { name: "  " }), /nombre/);
+  await assert.rejects(repo.updatePlan(id, { priceFrom: -1 }), /precio/);
+  await assert.rejects(repo.updatePlan(id, { priceFrom: Number.NaN }), /precio/);
+
+  await repo.updatePlan(id, {
+    priceFrom: 6000,
+    active: true,
+    description: " Para empezar ",
+    includes: [
+      { label: " Cobertura ", lines: [" 4 horas ", "", "  "] },
+      { label: "", lines: [] }, // fila vacía: se descarta
+    ],
+  });
+  plan = (await repo.getDb()).plans.find((p) => p.id === id)!;
+  assert.equal(plan.description, "Para empezar");
+  assert.deepEqual(plan.includes, [{ label: "Cobertura", lines: ["4 horas"] }]);
+  await assertPersisted(client, repo, "updatePlan");
+
+  await repo.updatePlan(id, { featured: true });
+  await repo.updatePlan("plan_legacy", { featured: true });
+  const featured = (await repo.getDb()).plans.filter((p) => p.featured).map((p) => p.id);
+  assert.deepEqual(featured, ["plan_legacy"], "destacar otro quita el anterior");
+  await assertPersisted(client, repo, "featured");
+
+  await repo.updatePlan("plan_story", { active: false });
+  const visible = toPublicPlans((await repo.getDb()).plans);
+  assert.deepEqual(visible.map((p) => [p.num, p.name]), [["01", "essentials™"], ["02", "the new™"], ["03", "the legacy™"]]);
+  await assertPersisted(client, repo, "ocultar");
+});
+
+test("planes por categoría: pestañas solo con planes activos, un destacado por pestaña y categoría validada", async () => {
+  const client = fakeClient();
+  const repo = repoOn(client);
+  await repo.seed(buildSeed());
+
+  const d1 = await repo.createPlan("the date™", "dates");
+  const d2 = await repo.createPlan("the long date™", "dates");
+  const p1 = await repo.createPlan("the question™", "proposal");
+  await assert.rejects(repo.createPlan("x", "otra" as any), /categoría/);
+  await assert.rejects(repo.updatePlan(d1, { category: "otra" as any }), /categoría/);
+
+  // nacen ocultos: todavía solo hay la pestaña Wedding
+  assert.deepEqual(toPlanGroups((await repo.getDb()).plans).map((g) => g.id), ["wedding"]);
+
+  await repo.updatePlan(d1, { active: true, priceFrom: 900 });
+  await repo.updatePlan(d2, { active: true, priceFrom: 1500 });
+  await repo.updatePlan(p1, { active: true }); // sin precio: "Consultar precio"
+  const groups = toPlanGroups((await repo.getDb()).plans);
+  assert.deepEqual(groups.map((g) => [g.id, g.label, g.plans.length]), [["wedding", "Wedding", 3], ["dates", "Dates", 2], ["proposal", "Proposal", 1]]);
+  assert.deepEqual(groups[1].plans.map((p) => p.num), ["01", "02"], "la numeración empieza en cada pestaña");
+
+  // destacado: uno por pestaña; Wedding conserva el suyo
+  await repo.updatePlan(d1, { featured: true });
+  await repo.updatePlan(d2, { featured: true });
+  const featured = (await repo.getDb()).plans.filter((p) => p.featured).map((p) => p.id).sort();
+  assert.deepEqual(featured, ["plan_story", d2].sort());
+
+  // mover el destacado de Dates a Wedding quita el destacado que tenía Wedding
+  await repo.updatePlan(d2, { category: "wedding" });
+  const after = (await repo.getDb()).plans.filter((p) => p.featured).map((p) => p.id);
+  assert.deepEqual(after, [d2]);
+  assert.deepEqual(toPlanGroups((await repo.getDb()).plans).map((g) => g.id), ["wedding", "dates", "proposal"]);
+  await assertPersisted(client, repo, "categorías");
+
+  // ocultar todos los de una pestaña la quita
+  await repo.updatePlan(p1, { active: false });
+  assert.deepEqual(toPlanGroups((await repo.getDb()).plans).map((g) => g.id), ["wedding", "dates"]);
+});
+
+test("subida de varios archivos: van de a tres, quedan en el orden elegido y un fallo no deja nada a medias", async () => {
+  const live = { now: 0, max: 0 };
+  const uploaded: string[] = [];
+  const removed: string[] = [];
+  let failOn = -1;
+  const fakeStorage = {
+    async put(blob: Blob) {
+      const n = Number(await blob.text()); // el contenido es el número de archivo
+      live.now++;
+      live.max = Math.max(live.max, live.now);
+      await new Promise((r) => setTimeout(r, 5 + (n % 3) * 4)); // terminan desordenados
+      live.now--;
+      if (n === failOn) throw new Error("se cayó la conexión");
+      uploaded.push(`o/${n}`);
+      return `o/${n}`;
+    },
+    async get() { return null; },
+    async remove(keys: string[]) { removed.push(...keys); },
+    async clear() {},
+  };
+  const { setStorage } = await import("../src/storage");
+  setStorage(fakeStorage);
+
+  const client = fakeClient();
+  const repo = repoOn(client);
+  await repo.seed(buildSeed());
+  const cv = (await repo.getDb()).coverages[0];
+  const mk = (n: number) => ({ momentName: "Ceremonia", blob: new Blob([String(n)]), name: `f${n}.jpg`, kind: "photo" as const });
+  const countFiles = async () => (await repo.getDb()).files.length;
+  const before = await countFiles();
+
+  await repo.addFiles(cv.id, [0, 1, 2, 3, 4, 5, 6].map(mk));
+  assert.equal(live.max, 3, "tres a la vez, no más");
+  const added = (await repo.getDb()).files.filter((f) => f.momentId && f.storageKey.startsWith("o/")).sort((a, b) => a.order - b.order);
+  assert.deepEqual(added.map((f) => f.name), [0, 1, 2, 3, 4, 5, 6].map((n) => `f${n}.jpg`), "mismo orden en que se eligieron");
+  assert.equal(await countFiles(), before + 7);
+
+  uploaded.length = 0;
+  failOn = 5;
+  await assert.rejects(repo.addFiles(cv.id, [10, 11, 12, 5, 13, 14, 15, 16].map(mk)), /se cayó/);
+  assert.equal(await countFiles(), before + 7, "no se guardó ninguno de esa tanda");
+  assert.deepEqual([...removed].sort(), [...uploaded].sort(), "lo ya subido se borró de R2");
+  assert.ok(uploaded.length < 8, "al fallar deja de empezar archivos nuevos");
+});
+
+test("vista previa del portal: el token del admin se mantiene al día y se usa solo en memoria", async () => {
+  // 1) el repo siempre conoce el token vigente de la sesión (aunque se renueve sin cambiar de usuario)
+  const client = fakeClient();
+  let notify: (event: string, session: unknown) => void = () => {};
+  (client as any).auth.onAuthStateChange = (cb: typeof notify) => {
+    notify = cb;
+    return { data: { subscription: { unsubscribe() {} } } };
+  };
+  const repo = repoOn(client);
+  assert.equal(repo.previewToken(), null);
+  notify("SIGNED_IN", { user: { id: "u1" }, access_token: "A1" });
+  assert.equal(repo.previewToken(), "A1");
+  notify("TOKEN_REFRESHED", { user: { id: "u1" }, access_token: "A2" });
+  assert.equal(repo.previewToken(), "A2", "se renovó el token, mismo usuario");
+  notify("SIGNED_OUT", null);
+  assert.equal(repo.previewToken(), null);
+
+  // 2) con el token recibido, las lecturas van como ese usuario y no se guarda ninguna sesión
+  const seen: { auth: string | null; apikey: string | null; url: string }[] = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = (async (input: any, init: any) => {
+    const h = new Headers(init?.headers ?? (input as Request).headers);
+    seen.push({ auth: h.get("authorization"), apikey: h.get("apikey"), url: String(input?.url ?? input) });
+    return Response.json([]);
+  }) as any;
+  try {
+    const web = new SupabaseRepo("https://sb.test", "anon-key");
+    web.startPreview("TOKEN-ADMIN");
+    await web.getDb();
+    const reads = seen.filter((s) => s.url.includes("/rest/v1/"));
+    assert.ok(reads.length > 5, "leyó las tablas");
+    assert.ok(reads.every((s) => s.auth === "Bearer TOKEN-ADMIN" && s.apikey === "anon-key"), "todas las lecturas van con el token del admin");
+    assert.equal(web.previewToken(), null, "el portal no se convierte en una sesión de admin");
+  } finally {
+    globalThis.fetch = realFetch;
+  }
 });
