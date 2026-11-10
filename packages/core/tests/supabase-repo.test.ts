@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { SupabaseRepo, publicKeys } from "../src/supabase-repo";
 import { buildSeed } from "../src/seed";
-import { toPublicPlans } from "../src/views";
+import { toPlanGroups, toPublicPlans } from "../src/views";
 import type { Db } from "../src/types";
 
 type Row = Record<string, any>;
@@ -294,6 +294,45 @@ test("planes: se crea oculto, valida, solo uno queda destacado y lo guardado se 
   const visible = toPublicPlans((await repo.getDb()).plans);
   assert.deepEqual(visible.map((p) => [p.num, p.name]), [["01", "essentials™"], ["02", "the new™"], ["03", "the legacy™"]]);
   await assertPersisted(client, repo, "ocultar");
+});
+
+test("planes por categoría: pestañas solo con planes activos, un destacado por pestaña y categoría validada", async () => {
+  const client = fakeClient();
+  const repo = repoOn(client);
+  await repo.seed(buildSeed());
+
+  const d1 = await repo.createPlan("the date™", "dates");
+  const d2 = await repo.createPlan("the long date™", "dates");
+  const p1 = await repo.createPlan("the question™", "proposal");
+  await assert.rejects(repo.createPlan("x", "otra" as any), /categoría/);
+  await assert.rejects(repo.updatePlan(d1, { category: "otra" as any }), /categoría/);
+
+  // nacen ocultos: todavía solo hay la pestaña Wedding
+  assert.deepEqual(toPlanGroups((await repo.getDb()).plans).map((g) => g.id), ["wedding"]);
+
+  await repo.updatePlan(d1, { active: true, priceFrom: 900 });
+  await repo.updatePlan(d2, { active: true, priceFrom: 1500 });
+  await repo.updatePlan(p1, { active: true }); // sin precio: "Consultar precio"
+  const groups = toPlanGroups((await repo.getDb()).plans);
+  assert.deepEqual(groups.map((g) => [g.id, g.label, g.plans.length]), [["wedding", "Wedding", 3], ["dates", "Dates", 2], ["proposal", "Proposal", 1]]);
+  assert.deepEqual(groups[1].plans.map((p) => p.num), ["01", "02"], "la numeración empieza en cada pestaña");
+
+  // destacado: uno por pestaña; Wedding conserva el suyo
+  await repo.updatePlan(d1, { featured: true });
+  await repo.updatePlan(d2, { featured: true });
+  const featured = (await repo.getDb()).plans.filter((p) => p.featured).map((p) => p.id).sort();
+  assert.deepEqual(featured, ["plan_story", d2].sort());
+
+  // mover el destacado de Dates a Wedding quita el destacado que tenía Wedding
+  await repo.updatePlan(d2, { category: "wedding" });
+  const after = (await repo.getDb()).plans.filter((p) => p.featured).map((p) => p.id);
+  assert.deepEqual(after, [d2]);
+  assert.deepEqual(toPlanGroups((await repo.getDb()).plans).map((g) => g.id), ["wedding", "dates", "proposal"]);
+  await assertPersisted(client, repo, "categorías");
+
+  // ocultar todos los de una pestaña la quita
+  await repo.updatePlan(p1, { active: false });
+  assert.deepEqual(toPlanGroups((await repo.getDb()).plans).map((g) => g.id), ["wedding", "dates"]);
 });
 
 test("subida de varios archivos: van de a tres, quedan en el orden elegido y un fallo no deja nada a medias", async () => {

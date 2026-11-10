@@ -3,7 +3,7 @@
 import type { CoverageType, Db, MediaFile, Plan, PublicItem, Tag } from "../types";
 import { legacyWorks } from "./legacy-works";
 
-export const DB_VERSION = 4; // 4: sin cuentas ni historia de demo; 3: planes con renglones, destacado y activo
+export const DB_VERSION = 5; // 5: categorías de planes; 4: sin cuentas ni historia de demo; 3: planes con renglones, destacado y activo
 
 const SEED_DATE = "2026-10-04T00:00:00.000Z";
 
@@ -14,6 +14,7 @@ export const seedPlans: Plan[] = [
     name: "essentials™",
     description: "Lo esencial para recordar su día tal como fue.",
     priceFrom: 4500,
+    category: "wedding",
     featured: false,
     active: true,
     includes: [
@@ -28,6 +29,7 @@ export const seedPlans: Plan[] = [
     name: "the story™",
     description: "Para quienes quieren verse, sentirse y reconocerse en su historia.",
     priceFrom: 8000,
+    category: "wedding",
     featured: true,
     active: true,
     includes: [
@@ -49,6 +51,7 @@ export const seedPlans: Plan[] = [
     name: "the legacy™",
     description: "Para quienes entienden que este recuerdo no es solo para hoy.",
     priceFrom: 12000,
+    category: "wedding",
     featured: false,
     active: true,
     includes: [

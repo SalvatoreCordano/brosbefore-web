@@ -614,9 +614,64 @@ button {
   max-width: 1000px;
 }
 .plans {
+  --cols: 3;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
   gap: 12px;
+  /* con 2 planes las tarjetas no se estiran: miden lo mismo que en una fila de 3, y quedan centradas */
+  max-width: max(calc(var(--cols) * 33.34%), min(100%, 380px));
+  margin-inline: auto;
+  animation: fadeIn 0.45s var(--ease);
+}
+/* Selector de tipo de plan, como el de mensual/anual en un pago */
+.plan-switch {
+  --pad: 4px;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto 36px;
+  padding: var(--pad);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--soft);
+}
+.plan-switch__thumb {
+  position: absolute;
+  top: var(--pad);
+  bottom: var(--pad);
+  left: var(--pad);
+  width: calc((100% - 2 * var(--pad)) / var(--n));
+  border-radius: 999px;
+  background: var(--ink);
+  transform: translateX(calc(var(--i) * 100%));
+  transition: transform 0.45s var(--ease);
+}
+.plan-switch__tab {
+  position: relative;
+  height: 40px;
+  padding: 0 clamp(14px, 4vw, 30px);
+  border-radius: 999px;
+  font-size: 14px;
+  color: var(--body);
+  white-space: nowrap;
+  transition: color 0.3s;
+}
+.plan-switch__tab:hover {
+  color: var(--ink);
+}
+.plan-switch__tab[aria-selected="true"] {
+  color: var(--bg);
+}
+.plan-switch__tab:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+@media (pointer: coarse) {
+  .plan-switch__tab {
+    height: 44px;
+  }
 }
 .plan {
   border: 1px solid var(--line);
@@ -729,6 +784,9 @@ button {
   .about {
     grid-template-columns: 1fr;
   }
+  .plans {
+    max-width: none;
+  }
   .about__img {
     position: static;
   }
@@ -782,6 +840,9 @@ button {
 @media (prefers-reduced-motion: reduce) {
   * {
     transition-duration: 0.01ms !important;
+  }
+  .plans {
+    animation: none;
   }
 }
 

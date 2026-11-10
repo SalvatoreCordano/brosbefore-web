@@ -11,14 +11,16 @@ import type {
   MediaFile,
   MediaKind,
   Member,
-  PlanRow,
   Plan,
+  PlanCategory,
+  PlanRow,
   PortalStatus,
   PresItemRole,
   PresentationContent,
   PublicProfile,
   PublicScope,
 } from "./types";
+import { PLAN_CATEGORIES } from "./types";
 import { youtubeId } from "./media";
 import { mediaUrls, storage } from "./storage";
 
@@ -61,7 +63,7 @@ export interface Repo {
 
   // ---- planes ----
   /** nace oculto: se muestra en la web cuando lo actives. Sin precio (0) la web dice "Consultar precio" */
-  createPlan(name: string): Promise<Id>;
+  createPlan(name: string, category?: PlanCategory): Promise<Id>;
   updatePlan(id: Id, patch: Partial<Omit<Plan, "id">>): Promise<void>;
 
   // ---- archivos ----
@@ -383,11 +385,12 @@ export abstract class DbRepo implements Repo {
   }
 
   // ---------- planes ----------
-  async createPlan(name: string) {
+  async createPlan(name: string, category: PlanCategory = "wedding") {
     if (!name.trim()) throw new Error("El plan necesita un nombre");
+    if (!PLAN_CATEGORIES.some((c) => c.id === category)) throw new Error("Esa categoría de planes no existe");
     return this.tx((db) => {
       const id = uid("plan");
-      db.plans.push({ id, name: name.trim(), description: "", priceFrom: 0, includes: [], featured: false, active: false });
+      db.plans.push({ id, name: name.trim(), description: "", priceFrom: 0, includes: [], category, featured: false, active: false });
       return id;
     });
   }
@@ -399,12 +402,14 @@ export abstract class DbRepo implements Repo {
       const next = { ...p, ...patch };
       if (!next.name.trim()) throw new Error("El plan necesita un nombre");
       if (!Number.isFinite(next.priceFrom) || next.priceFrom < 0) throw new Error("El precio debe ser un número desde 0");
+      if (!PLAN_CATEGORIES.some((c) => c.id === next.category)) throw new Error("Esa categoría de planes no existe");
       Object.assign(p, next, {
         name: next.name.trim(),
         description: next.description.trim(),
         includes: cleanRows(next.includes),
       });
-      if (patch.featured) db.plans.forEach((x) => x.id !== id && (x.featured = false)); // solo uno destacado
+      // solo uno destacado por pestaña (también al mover un plan destacado a otra categoría)
+      if (next.featured) db.plans.forEach((x) => x.id !== id && x.category === next.category && (x.featured = false));
     });
   }
 

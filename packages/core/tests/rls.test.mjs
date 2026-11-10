@@ -268,6 +268,15 @@ test("planes: el público solo ve los activos, la pareja no los edita y el conte
   ]);
 });
 
+test("planes: los iniciales son Wedding y no se acepta una categoría inventada", async () => {
+  const { rows } = await db.query("select id, category from plans where id like 'plan_%' order by id");
+  assert.deepEqual(rows.map((r) => r.category), ["wedding", "wedding", "wedding"]);
+  await assert.rejects(db.exec("insert into plans (id, name, category) values ('zz', 'zz', 'otra')"), /check/i);
+  await db.exec("insert into plans (id, name, category, active, price_from) values ('d1', 'dates uno', 'dates', true, 1000)");
+  await as("anon", null, async () => assert.deepEqual(await ids("select id from plans where category = 'dates'"), ["d1"]));
+  await db.exec("delete from plans where id = 'd1'");
+});
+
 test("respaldos: backup_reader lee todo a pesar de RLS, no escribe y una tabla sin política se detecta", async () => {
   const ops = readFileSync(new URL("../../../supabase/ops/backup_role.sql", import.meta.url), "utf8");
   // la misma consulta que usa scripts/backup.sh para detectar tablas sin política

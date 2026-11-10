@@ -7,12 +7,14 @@ import type {
   Id,
   MediaFile,
   MediaRef,
-  PlanRow,
   Plan,
+  PlanCategory,
+  PlanRow,
   PortfolioItem,
   PresItem,
   PublicScope,
 } from "./types";
+import { PLAN_CATEGORIES } from "./types";
 
 /** Convierte una storageKey en URL. Cada app pasa la suya (basePath/IndexedDB en el mock, R2 en real). */
 export type ResolveUrl = ((key: string) => string) & { original?: (key: string) => string };
@@ -89,10 +91,21 @@ export interface PlanCard {
 /** Del más económico al más caro; los que no tienen precio (0, "Consultar precio") van al final. */
 export const byPlanPrice = (a: Plan, b: Plan) => (a.priceFrom || Infinity) - (b.priceFrom || Infinity) || a.name.localeCompare(b.name);
 
-/** Planes visibles en la web: solo los activos. */
-export function toPublicPlans(plans: Plan[]): PlanCard[] {
+export interface PlanGroup {
+  id: PlanCategory;
+  label: string;
+  plans: PlanCard[];
+}
+
+/** Planes visibles en la web, por pestaña (Wedding, Dates, Proposal): solo los activos y solo las pestañas con planes. */
+export function toPlanGroups(plans: Plan[]): PlanGroup[] {
+  return PLAN_CATEGORIES.map((c) => ({ id: c.id, label: c.label, plans: toPublicPlans(plans, c.id) })).filter((g) => g.plans.length);
+}
+
+/** Planes visibles de una categoría (por defecto Wedding): solo los activos. */
+export function toPublicPlans(plans: Plan[], category: PlanCategory = "wedding"): PlanCard[] {
   return plans
-    .filter((p) => p.active !== false)
+    .filter((p) => p.active !== false && (p.category ?? "wedding") === category)
     .sort(byPlanPrice)
     .map((p, i) => ({
       id: p.id,

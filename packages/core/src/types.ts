@@ -11,6 +11,14 @@ export type PresItemRole = "main_video" | "secondary_video" | "featured_photo";
 export type PublicScope = "gallery" | "portfolio";
 export type MediaKind = "photo" | "video";
 
+/** Familias de planes de la página /planes: cada una es una pestaña. Wedding es la principal. */
+export const PLAN_CATEGORIES = [
+  { id: "wedding", label: "Wedding" },
+  { id: "dates", label: "Dates" },
+  { id: "proposal", label: "Proposal" },
+] as const;
+export type PlanCategory = (typeof PLAN_CATEGORIES)[number]["id"];
+
 /** Un renglón de la tabla de un plan: "Cobertura", "Crew", "Entregables"… con sus líneas. */
 export interface PlanRow {
   label: string;
@@ -23,7 +31,8 @@ export interface Plan {
   description: string;
   priceFrom: number; // en soles
   includes: PlanRow[];
-  featured: boolean; // se destaca en la página de planes (solo uno)
+  category: PlanCategory;
+  featured: boolean; // se destaca en su pestaña de la página de planes (solo uno por pestaña)
   active: boolean; // oculto = no sale en la web ni en el público
 }
 
