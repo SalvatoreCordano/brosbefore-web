@@ -18,7 +18,10 @@ Los pasos 1 a 3 son de Cloudflare; el 4 y el 5, de Supabase; el 6, de GitHub. Lo
 1. **Bucket:** R2 → crear `brosbefore-backups` (privado, sin dominio ni r2.dev). En *Settings → Object lifecycle rules*, agregar una
    regla que borre los objetos a los 90 días (así se guardan unos tres meses de respaldos semanales).
 2. **Token de R2:** R2 → *Manage API tokens* → crear un token con permiso **Object Read & Write**, limitado **solo** al bucket
-   `brosbefore-backups`. Guarda el *Access Key ID* y el *Secret Access Key* (se muestran una vez), y tu *Account ID*.
+   `brosbefore-backups`. Cloudflare ofrece dos tipos: de **cuenta** (*Account API token*) y de **usuario** (*User API token*).
+   Usa el de **cuenta**: pertenece a la cuenta, no a una persona, y no se rompe si alguien cambia de rol o sale del equipo (el de
+   usuario deja de funcionar si esa persona pierde acceso). Guarda el *Access Key ID* y el *Secret Access Key* (se muestran una vez),
+   y tu *Account ID*.
 3. **Clave para cifrar** (en tu computadora):
    ```bash
    age-keygen -o clave-respaldos.txt
