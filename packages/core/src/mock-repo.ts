@@ -57,6 +57,11 @@ export class MockRepo extends DbRepo {
     if (localStorage.getItem(SESSION_KEY) && !(await this.getSession())) await this.logout();
   }
 
+  previewToken() {
+    return null; // en la demo la web y el admin comparten los datos del navegador: no hace falta
+  }
+  startPreview(_token: string) {}
+
   async resetDemo() {
     this.db = buildSeed();
     try {

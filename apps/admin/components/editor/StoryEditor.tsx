@@ -4,9 +4,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { completeness, type EditorStep } from "@bb/core";
-import { webUrl } from "@/lib/asset";
 import { useDb } from "@/lib/use-db";
-import { useFlash } from "../ui";
+import { PreviewButton, useFlash } from "../ui";
 import { StepAcceso } from "./StepAcceso";
 import { StepAgradecimientos } from "./StepAgradecimientos";
 import { StepArchivos } from "./StepArchivos";
@@ -82,9 +81,7 @@ export function StoryEditor() {
             </span>
             {comp.done}/{comp.items.length} listo
           </button>
-          <a className="btn btn--ghost btn--sm" href={webUrl(`/portal?preview=${couple.id}`)} target="_blank" rel="noopener">
-            Vista previa como la pareja
-          </a>
+          <PreviewButton coupleId={couple.id}>Vista previa como la pareja</PreviewButton>
         </div>
         {showChecklist && (
           <ul className="checklist">

@@ -340,3 +340,41 @@ test("subida de varios archivos: van de a tres, quedan en el orden elegido y un 
   assert.deepEqual([...removed].sort(), [...uploaded].sort(), "lo ya subido se borró de R2");
   assert.ok(uploaded.length < 8, "al fallar deja de empezar archivos nuevos");
 });
+
+test("vista previa del portal: el token del admin se mantiene al día y se usa solo en memoria", async () => {
+  // 1) el repo siempre conoce el token vigente de la sesión (aunque se renueve sin cambiar de usuario)
+  const client = fakeClient();
+  let notify: (event: string, session: unknown) => void = () => {};
+  (client as any).auth.onAuthStateChange = (cb: typeof notify) => {
+    notify = cb;
+    return { data: { subscription: { unsubscribe() {} } } };
+  };
+  const repo = repoOn(client);
+  assert.equal(repo.previewToken(), null);
+  notify("SIGNED_IN", { user: { id: "u1" }, access_token: "A1" });
+  assert.equal(repo.previewToken(), "A1");
+  notify("TOKEN_REFRESHED", { user: { id: "u1" }, access_token: "A2" });
+  assert.equal(repo.previewToken(), "A2", "se renovó el token, mismo usuario");
+  notify("SIGNED_OUT", null);
+  assert.equal(repo.previewToken(), null);
+
+  // 2) con el token recibido, las lecturas van como ese usuario y no se guarda ninguna sesión
+  const seen: { auth: string | null; apikey: string | null; url: string }[] = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = (async (input: any, init: any) => {
+    const h = new Headers(init?.headers ?? (input as Request).headers);
+    seen.push({ auth: h.get("authorization"), apikey: h.get("apikey"), url: String(input?.url ?? input) });
+    return Response.json([]);
+  }) as any;
+  try {
+    const web = new SupabaseRepo("https://sb.test", "anon-key");
+    web.startPreview("TOKEN-ADMIN");
+    await web.getDb();
+    const reads = seen.filter((s) => s.url.includes("/rest/v1/"));
+    assert.ok(reads.length > 5, "leyó las tablas");
+    assert.ok(reads.every((s) => s.auth === "Bearer TOKEN-ADMIN" && s.apikey === "anon-key"), "todas las lecturas van con el token del admin");
+    assert.equal(web.previewToken(), null, "el portal no se convierte en una sesión de admin");
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});

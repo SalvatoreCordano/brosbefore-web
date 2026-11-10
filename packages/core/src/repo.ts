@@ -112,6 +112,10 @@ export interface Repo {
   getAdmin(): Promise<{ email: string } | null>;
   adminLogin(email: string, password: string): Promise<void>;
   adminLogout(): Promise<void>;
+  /** token de la sesión del admin, para abrir la vista previa del portal en otro dominio (null en la demo o sin sesión) */
+  previewToken(): string | null;
+  /** el portal abierto con ese token lee como el admin, solo en memoria: no guarda sesión ni la renueva */
+  startPreview(token: string): void;
 }
 
 const UPLOAD_PARALLEL = 3; // archivos subiéndose a la vez: más rápido sin saturar la conexión ni el Worker
@@ -172,6 +176,8 @@ export abstract class DbRepo implements Repo {
   abstract getAdmin(): Promise<{ email: string } | null>;
   abstract adminLogin(email: string, password: string): Promise<void>;
   abstract adminLogout(): Promise<void>;
+  abstract previewToken(): string | null;
+  abstract startPreview(token: string): void;
 
   protected emit() {
     this.listeners.forEach((l) => l());
