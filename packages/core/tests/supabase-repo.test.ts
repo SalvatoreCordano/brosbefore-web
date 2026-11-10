@@ -262,7 +262,10 @@ test("planes: se crea oculto, valida, solo uno queda destacado y lo guardado se 
   let plan = (await repo.getDb()).plans.find((p) => p.id === id)!;
   assert.deepEqual([plan.name, plan.active, plan.priceFrom], ["the new™", false, 0]);
 
-  await assert.rejects(repo.updatePlan(id, { active: true }), /precio/); // sin precio no se muestra
+  await repo.updatePlan(id, { active: true }); // sin precio se puede mostrar: la web dice "Consultar precio"
+  const noPrice = toPublicPlans((await repo.getDb()).plans);
+  assert.deepEqual(noPrice.map((p) => [p.name, p.priceFrom]).at(-1), ["the new™", 0], "sin precio va al final");
+  await repo.updatePlan(id, { active: false });
   await assert.rejects(repo.updatePlan(id, { name: "  " }), /nombre/);
   await assert.rejects(repo.updatePlan(id, { priceFrom: -1 }), /precio/);
   await assert.rejects(repo.updatePlan(id, { priceFrom: Number.NaN }), /precio/);

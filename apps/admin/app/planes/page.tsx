@@ -1,12 +1,13 @@
 "use client";
 // Planes: lo que se ve en la página de planes de la web. Un plan oculto no lo ve el público.
 import { useState } from "react";
-import { repo, type Plan, type PlanRow } from "@bb/core";
+import { byPlanPrice, repo, type Plan, type PlanRow } from "@bb/core";
 import { Section, TextField, Toggle } from "@/components/ui";
 import { webUrl } from "@/lib/asset";
 import { useDb } from "@/lib/use-db";
 
-const toPrice = (v: string) => (v.trim() ? Number(v.replace(/[,\s]/g, "")) : Number.NaN);
+// vacío = sin precio: la web muestra "Consultar precio"
+const toPrice = (v: string) => (v.trim() ? Number(v.replace(/[,\s]/g, "")) : 0);
 
 export default function Planes() {
   const db = useDb();
@@ -32,7 +33,7 @@ export default function Planes() {
     const n = db.couples.filter((c) => c.planId === id && !c.deletedAt).length;
     return `${n} ${n === 1 ? "pareja" : "parejas"} con este plan`;
   };
-  const plans = [...db.plans].sort((a, b) => a.priceFrom - b.priceFrom);
+  const plans = [...db.plans].sort(byPlanPrice);
 
   return (
     <>
@@ -53,7 +54,7 @@ export default function Planes() {
         </div>
       </header>
       <p className="hint">
-        Se ordenan por precio en la web. Un plan nuevo nace oculto: ponle precio y actívalo cuando esté listo. Los cambios se guardan al salir de cada campo.
+        Se ordenan por precio en la web. Un plan nuevo nace oculto: actívalo cuando esté listo. Si dejas el precio vacío, la web muestra "Consultar precio". Los cambios se guardan al salir de cada campo.
       </p>
       {error && <p className="form-error">{error}</p>}
 
@@ -65,7 +66,7 @@ export default function Planes() {
         >
           <div className="form-grid">
             <TextField label="Nombre" value={p.name} onCommit={(v) => repo.updatePlan(p.id, { name: v })} />
-            <TextField label="Inversión desde" prefix="S/" value={String(p.priceFrom)} onCommit={(v) => repo.updatePlan(p.id, { priceFrom: toPrice(v) })} />
+            <TextField label="Inversión desde" prefix="S/" placeholder="Vacío = Consultar precio" value={p.priceFrom > 0 ? String(p.priceFrom) : ""} onCommit={(v) => repo.updatePlan(p.id, { priceFrom: toPrice(v) })} />
             <TextField label="Descripción" value={p.description} multiline rows={2} onCommit={(v) => repo.updatePlan(p.id, { description: v })} />
           </div>
           <div className="form-grid form-grid--2">

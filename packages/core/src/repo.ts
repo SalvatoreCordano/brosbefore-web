@@ -61,7 +61,7 @@ export interface Repo {
   deleteCouple(coupleId: Id): Promise<void>;
 
   // ---- planes ----
-  /** nace oculto: se muestra en la web cuando tenga precio y se active */
+  /** nace oculto: se muestra en la web cuando lo actives. Sin precio (0) la web dice "Consultar precio" */
   createPlan(name: string): Promise<Id>;
   updatePlan(id: Id, patch: Partial<Omit<Plan, "id">>): Promise<void>;
 
@@ -395,7 +395,6 @@ export abstract class DbRepo implements Repo {
       const next = { ...p, ...patch };
       if (!next.name.trim()) throw new Error("El plan necesita un nombre");
       if (!Number.isFinite(next.priceFrom) || next.priceFrom < 0) throw new Error("El precio debe ser un número desde 0");
-      if (next.active && next.priceFrom <= 0) throw new Error("Ponle precio al plan antes de mostrarlo");
       Object.assign(p, next, {
         name: next.name.trim(),
         description: next.description.trim(),

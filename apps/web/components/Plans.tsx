@@ -19,7 +19,13 @@ export function Plans() {
             <p className="plan__desc">{p.description}</p>
           </div>
           <div className="plan__price">
-            Inversión desde<strong>{price(p.priceFrom)}</strong>
+            {p.priceFrom > 0 ? (
+              <>
+                Inversión desde<strong>{price(p.priceFrom)}</strong>
+              </>
+            ) : (
+              <strong>Consultar precio</strong>
+            )}
           </div>
           <dl>
             {p.rows.map((r) => (

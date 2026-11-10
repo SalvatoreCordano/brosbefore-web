@@ -86,11 +86,14 @@ export interface PlanCard {
   rows: PlanRow[];
 }
 
-/** Planes visibles en la web: solo los activos, del más económico al más caro. */
+/** Del más económico al más caro; los que no tienen precio (0, "Consultar precio") van al final. */
+export const byPlanPrice = (a: Plan, b: Plan) => (a.priceFrom || Infinity) - (b.priceFrom || Infinity) || a.name.localeCompare(b.name);
+
+/** Planes visibles en la web: solo los activos. */
 export function toPublicPlans(plans: Plan[]): PlanCard[] {
   return plans
     .filter((p) => p.active !== false)
-    .sort((a, b) => a.priceFrom - b.priceFrom)
+    .sort(byPlanPrice)
     .map((p, i) => ({
       id: p.id,
       num: String(i + 1).padStart(2, "0"),
