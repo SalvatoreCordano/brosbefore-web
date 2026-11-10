@@ -3,6 +3,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { COVERAGE_LABEL, type CoverageType, type MediaView } from "@bb/core";
 import { photoColumnCount, splitColumns } from "@/lib/columns";
+import { openViewer } from "@/lib/viewer";
 
 /** Video con portada: al tocar play carga YouTube (embed) o el archivo MP4. */
 export function VideoPlayer({ video, title }: { video: MediaView; title: string }) {
@@ -39,8 +40,11 @@ export function VideoPlayer({ video, title }: { video: MediaView; title: string 
   );
 }
 
-/** Fotos en columnas que se leen en orden (1, 2 / 3, 4…): 2 en pantallas normales y más cuando hay ancho (2K, 4K). En móvil, una sola. */
-export function PhotoColumns({ photos, alt }: { photos: MediaView[]; alt: string }) {
+/**
+ * Fotos en columnas que se leen en orden (1, 2 / 3, 4…): 2 en pantallas normales y más cuando hay ancho (2K, 4K). En móvil, una sola.
+ * Al abrir una foto en grande se recorren todas las de `all` (por ejemplo, todos los momentos de la cobertura), no solo las de este grupo.
+ */
+export function PhotoColumns({ photos, alt, all = photos }: { photos: MediaView[]; alt: string; all?: MediaView[] }) {
   const box = useRef<HTMLDivElement>(null);
   const [count, setCount] = useState(2);
   useLayoutEffect(() => {
@@ -53,12 +57,25 @@ export function PhotoColumns({ photos, alt }: { photos: MediaView[]; alt: string
     return () => ro.disconnect();
   }, []);
   const cols = splitColumns(photos, (p) => (p.w && p.h ? p.h / p.w : 1.25), count);
+  // en grande: se abre sobre las fotos que ya tienen URL; el visor sale de la miniatura y vuelve a ella
+  const open = (n: number) => {
+    const ready = all.filter((p) => p.src);
+    const at = ready.findIndex((p) => p.id === photos[n].id);
+    if (at < 0) return;
+    openViewer(
+      ready.map((p, i) => ({ src: p.src, w: p.w, h: p.h, alt: `${alt} — foto ${i + 1}` })),
+      at,
+      (k) => document.querySelector<HTMLElement>(`img[data-pid="${ready[k].id}"]`)
+    );
+  };
   return (
     <div className="photos" ref={box}>
       {cols.map((col, ci) => (
         <div className="photos__col" key={ci}>
           {col.map(({ item: p, n }) => (
-            <img key={p.id} src={p.src || undefined} alt={`${alt} — foto ${n + 1}`} loading="lazy" width={p.w} height={p.h} style={{ order: n }} />
+            <button key={p.id} type="button" className="photos__open" style={{ order: n }} aria-label={`Ver la foto ${all.indexOf(p) + 1} en grande`} onClick={() => open(n)}>
+              <img src={p.src || undefined} alt="" loading="lazy" width={p.w} height={p.h} data-pid={p.id} />
+            </button>
           ))}
         </div>
       ))}

@@ -562,10 +562,42 @@ button {
 .photos img {
   width: 100%;
   height: auto;
-  margin-bottom: 10px;
   border-radius: 12px;
   break-inside: avoid;
   background: var(--soft);
+}
+/* cada foto es un botón que la abre en grande (zoom); el margen y el orden viven en el botón */
+.photos__open {
+  display: block;
+  width: 100%;
+  padding: 0;
+  margin-bottom: 10px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  cursor: zoom-in;
+}
+.photos__open:focus-visible,
+.dl-file__open:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+/* Visor de fotos (PhotoSwipe): siempre oscuro, con la tipografía y los colores del sitio */
+.pswp {
+  --pswp-bg: #0f0e0d;
+  --pswp-placeholder-bg: #1a1917;
+  --pswp-icon-color: #f1efeb;
+  --pswp-icon-color-secondary: #1b1916;
+  --pswp-error-text-color: #f1efeb;
+  font-family: var(--font);
+}
+.pswp__counter {
+  font-size: 13px;
+  letter-spacing: 0;
+  color: #f1efeb;
+}
+html.has-viewer {
+  overflow: hidden;
 }
 .detail__next {
   margin-top: 56px;

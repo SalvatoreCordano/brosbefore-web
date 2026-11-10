@@ -110,7 +110,7 @@ export function PresentationView({ view }: { view: View }) {
                   <span>{m.name}</span>
                   <span>{m.photos.length} fotos</span>
                 </div>
-                <PhotoColumns photos={m.photos} alt={view.names} />
+                <PhotoColumns photos={m.photos} all={current.moments.flatMap((x) => x.photos)} alt={view.names} />
               </div>
             ))}
           </section>

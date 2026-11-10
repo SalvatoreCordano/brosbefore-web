@@ -90,7 +90,7 @@ export function PublicProfile({ slug }: { slug: string }) {
                     <span>{m.name}</span>
                     <span>{m.photos.length} fotos</span>
                   </div>
-                  <PhotoColumns photos={m.photos} alt={profile.title} />
+                  <PhotoColumns photos={m.photos} all={current.moments.flatMap((x) => x.photos)} alt={profile.title} />
                 </div>
               ))}
             </section>

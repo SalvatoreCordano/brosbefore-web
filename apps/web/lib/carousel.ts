@@ -3,6 +3,7 @@
 // mountCarousel() arma todo sobre los elementos dados y devuelve una función que lo desmonta.
 import type { PortfolioItem, PortfolioPhoto } from "@bb/core";
 import { detailColumnCount, splitColumns } from "./columns";
+import { openViewer } from "./viewer";
 import { projectorSound } from "./projector-sound";
 
 export interface CarouselEls {
@@ -405,7 +406,7 @@ export function mountCarousel(els: CarouselEls, works: PortfolioItem[], navigate
 
   // ---------- teclado ----------
   on(window, "keydown", (e: KeyboardEvent) => {
-    if (document.body.classList.contains("menu-open")) return;
+    if (document.body.classList.contains("menu-open") || document.documentElement.classList.contains("has-viewer")) return;
     if (["ArrowRight", "ArrowDown"].includes(e.key)) {
       e.preventDefault();
       goTo(Math.round(target) + 1);
@@ -431,7 +432,10 @@ export function mountCarousel(els: CarouselEls, works: PortfolioItem[], navigate
       .map(
         (c) =>
           `<div class="photos__col">${c
-            .map(({ item: p, n }) => `<img src="${esc(p.src)}" alt="${esc(w.couple)} — foto ${n + 1}" loading="lazy" style="order:${n}" ${sizeAttrs(p)} />`)
+            .map(
+              ({ item: p, n }) =>
+                `<button type="button" class="photos__open" style="order:${n}" data-photo="${n}" aria-label="Ver la foto ${n + 1} en grande"><img src="${esc(p.src)}" alt="" loading="lazy" ${sizeAttrs(p)} /></button>`
+            )
             .join("")}</div>`
       )
       .join("");
@@ -524,6 +528,15 @@ export function mountCarousel(els: CarouselEls, works: PortfolioItem[], navigate
     if (more) {
       document.body.classList.remove("is-detail");
       return navigate(more.dataset.href!);
+    }
+    const photo = t.closest<HTMLElement>("[data-photo]");
+    if (photo && selected >= 0) {
+      const w = works[selected];
+      return void openViewer(
+        w.photos.map((p, n) => ({ src: p.src, w: p.w, h: p.h, alt: `${w.couple} — foto ${n + 1}` })),
+        Number(photo.dataset.photo),
+        (i) => detailEl.querySelector<HTMLElement>(`[data-photo="${i}"] img`)
+      );
     }
     const play = t.closest(".video__play");
     if (play && selected >= 0) {
