@@ -35,9 +35,8 @@ Hasta el paso 7, subir archivos desde el admin avisa que falta conectar el Worke
 ## Límites a tener presentes
 
 - **Tope de espacio:** el Worker rechaza subidas cuando lo guardado (suma de `files.size_bytes` + 10 %) llega a
-  `CAP_BYTES` (9 GB, en `wrangler.jsonc`), para quedarse dentro de los 10 GB gratis. Es aproximado: no mide las
-  versiones ligeras ni las copias públicas, de ahí el margen. Para ampliar, subir `CAP_BYTES` (pasados los 10 GB R2 cobra
-  unos US$0.015 por GB al mes).
+  `CAP_BYTES` (20 GB, en `wrangler.jsonc`). Pasados los 10 GB gratis R2 cobra unos US$0.015 por GB al mes. Es aproximado: no mide las
+  versiones ligeras ni las copias públicas, de ahí el margen. Para ampliar, subir `CAP_BYTES`.
 - **Plan gratis de Workers:** 100.000 peticiones al día y cuerpos de hasta 100 MB; por eso los videos suben en partes de 50 MB.
   Pasado el límite diario las peticiones fallan, no se cobra.
 - **Fotos:** solo JPG, PNG y WebP (el navegador no lee HEIC ni RAW para armar la versión ligera).

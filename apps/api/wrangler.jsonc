@@ -12,8 +12,8 @@
     // llave pública (anon): la misma que ya va en la web
     "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zY2lidGlzanpmZmxuamh3aHdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI1Mjg4MTMsImV4cCI6MjEwODEwNDgxM30.OFzCVHA4Bz-fSkQ3y8S4kfQRUWdYqpFueUB4lY2-6mo",
     "ALLOWED_ORIGINS": "https://brosbeforefilm.com,https://admin.brosbeforefilm.com,http://localhost:3003,http://localhost:3004",
-    // tope de bytes guardados: 9 GB, para quedarse dentro de los 10 GB gratis de R2
-    "CAP_BYTES": "9000000000"
+    // tope de bytes guardados: 20 GB (pasados los 10 GB gratis de R2 cobra ~US$0.015 por GB al mes)
+    "CAP_BYTES": "20000000000"
   }
   // Secreto (no va aquí): SIGNING_SECRET — se carga en el panel de Cloudflare, ver README.
 }
