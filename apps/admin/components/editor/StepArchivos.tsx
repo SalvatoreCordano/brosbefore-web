@@ -80,8 +80,12 @@ export function StepArchivos({ db, couple, flash }: StepProps) {
     setRejected(bad);
     if (good.length) {
       setProgress({ label: "Subiendo", done: 0, total: good.length });
-      await repo.addFiles(active.id, good, (done) => setProgress({ label: "Subiendo", done, total: good.length }));
-      flash(`${good.length} archivos subidos a ${COVERAGE_LABEL[active.type]}`);
+      try {
+        await repo.addFiles(active.id, good, (done) => setProgress({ label: "Subiendo", done, total: good.length }));
+        flash(`${good.length} archivos subidos a ${COVERAGE_LABEL[active.type]}`);
+      } catch (e) {
+        flash(e instanceof Error ? e.message : "No se pudieron subir los archivos");
+      }
     }
     setProgress(null);
   };
